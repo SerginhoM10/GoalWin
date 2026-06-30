@@ -1,78 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "./supabaseClient";
 
-// ─── MOCK DATA ─────────────────────────────────────────────────────────────────
-const PREGUNTAS = {
-  facil: [
-    { q: "¿Quién ganó el Mundial 2022?", opts: ["Francia", "Argentina", "Brasil", "Alemania"], ans: 1 },
-    { q: "¿En qué club juega Vinicius Jr.?", opts: ["PSG", "Barcelona", "Real Madrid", "City"], ans: 2 },
-    { q: "¿Cuántos jugadores hay en un equipo de fútbol?", opts: ["10", "11", "12", "9"], ans: 1 },
-    { q: "¿Qué país ganó la Eurocopa 2024?", opts: ["Francia", "Alemania", "Italia", "España"], ans: 3 },
-  ],
-  medio: [
-    { q: "¿Cuántos Balones de Oro tiene Messi?", opts: ["6", "7", "8", "9"], ans: 2 },
-    { q: "¿Qué club tiene más Champions League?", opts: ["Barcelona", "Bayern", "Real Madrid", "Milan"], ans: 2 },
-    { q: "¿En qué año se fundó la Champions League moderna?", opts: ["1955", "1992", "1998", "1960"], ans: 1 },
-  ],
-  dificil: [
-    { q: "¿Quién marcó el gol de la final del Mundial 2010?", opts: ["Xavi", "Villa", "Iniesta", "Torres"], ans: 2 },
-    { q: "¿Qué jugador tiene el récord de goles en un año natural?", opts: ["Ronaldo", "Messi", "Haaland", "Müller"], ans: 1 },
-  ],
-  muyDificil: [
-    { q: "¿Cuántos goles marcó Gerd Müller en el Mundial 1970?", opts: ["8", "9", "10", "7"], ans: 2 },
-  ],
-};
-
-function getDailyQuestions() {
-  return [
-    ...PREGUNTAS.facil.slice(0, 4).map(q => ({ ...q, nivel: "facil", pts: 25 })),
-    ...PREGUNTAS.medio.slice(0, 3).map(q => ({ ...q, nivel: "medio", pts: 50 })),
-    ...PREGUNTAS.dificil.slice(0, 2).map(q => ({ ...q, nivel: "dificil", pts: 100 })),
-    { ...PREGUNTAS.muyDificil[0], nivel: "muyDificil", pts: 150 },
-  ];
-}
-
-const ALINEACION = {
-  equipo: "REAL MADRID",
-  rival: "Atlético de Madrid",
-  competicion: "Champions League",
-  temporada: "2015/16",
-  formacion: "4-3-3",
-  jugadores: [
-    { pos: "POR", nombre: "Navas" },
-    { pos: "LD", nombre: "Carvajal" },
-    { pos: "CB", nombre: "Pepe" },
-    { pos: "CB", nombre: "Ramos" },
-    { pos: "LI", nombre: "Marcelo" },
-    { pos: "MC", nombre: "Casemiro" },
-    { pos: "MC", nombre: "Kroos" },
-    { pos: "MC", nombre: "Modric" },
-    { pos: "EX", nombre: "Bale" },
-    { pos: "DC", nombre: "Benzema" },
-    { pos: "EX", nombre: "Ronaldo" },
-  ],
-};
-
-const JUGADOR = {
-  nombre: "Kylian Mbappé",
-  pistaGeneral: "🌟 Delantero | Menos de 30 años",
-  pistas: [
-    "Ganó el Mundial con tan solo 19 años",
-    "Su selección nacional es Francia 🇫🇷",
-    "Fue traspasado por más de 180M€",
-    "Club actual: Real Madrid",
-    "Nació en Bondy, París en 1998",
-  ],
-};
-
-const COMBINAS = [
-  { desc: "Balón de Oro + Barça", validar: (r) => ["messi","rivaldo","ronaldinho","cruyff","suarez"].some(n => r.includes(n)) },
-  { desc: "Brasil + Sevilla FC", validar: (r) => ["alves","dani alves","ganso","luiz fabiano"].some(n => r.includes(n)) },
-  { desc: "Goleador + Premier League", validar: (r) => ["haaland","salah","kane","henry","shearer"].some(n => r.includes(n)) },
-  { desc: "Portero + España", validar: (r) => ["casillas","de gea","reina","arrizabalaga"].some(n => r.includes(n)) },
-  { desc: "Alemán + Real Madrid", validar: (r) => ["kroos","ozil"].some(n => r.includes(n)) },
-];
-
 // ─── BONUS TIEMPO (Test) ────────────────────────────────────────────────────
 // Si el tiempo total del test <= 7s → 500 pts extra
 // Por cada segundo adicional desde 7 → resta 25 pts
@@ -387,14 +315,6 @@ function ResultOverlay({ pts, juego, scores, onVerRanking, onClose, extras }) {
 }
 
 // ─── PRÓXIMAMENTE (modo mantenimiento) ───────────────────────────────────────
-const JUEGOS_ACTIVOS = {
-  test: false,
-  alineacion: false,
-  jugador: false,
-  combina: false,
-  gol: false,
-};
-
 function Proximamente({ icon, nombre }) {
   return (
     <div className="card">
@@ -415,7 +335,7 @@ function Proximamente({ icon, nombre }) {
 }
 
 
-function TestDiario({ onFinish, done, scores }) {
+function TestDiario({ onFinish, done, scores, preguntas }) {
   const [phase, setPhase] = useState("intro");
   const [idx, setIdx] = useState(0);
   const [sel, setSel] = useState(null);
@@ -427,7 +347,7 @@ function TestDiario({ onFinish, done, scores }) {
   const [showResult, setShowResult] = useState(false);
   const [finalPts, setFinalPts] = useState(0);
   const [showOverlay, setShowOverlay] = useState(false);
-  const questions = useRef(getDailyQuestions());
+  const questions = useRef(preguntas);
 
   const q = questions.current[idx];
 
@@ -466,6 +386,13 @@ function TestDiario({ onFinish, done, scores }) {
 
   const totalSeconds = testStartTime ? Math.round((Date.now() - testStartTime) / 1000) : 0;
   const bonus = timeBonus(totalSeconds);
+
+  if (!preguntas || preguntas.length < 10) return (
+    <div className="card">
+      <div className="card-title">✔ TEST DIARIO</div>
+      <div className="alert alert-inf">⚠️ Aún no hay suficientes preguntas cargadas para hoy. Vuelve más tarde.</div>
+    </div>
+  );
 
   if (done) return (
     <div className="card">
@@ -572,7 +499,7 @@ function TestDiario({ onFinish, done, scores }) {
 }
 
 // ─── JUEGO 2: ALINEACIÓN ─────────────────────────────────────────────────────
-function AdivinaAlineacion({ onFinish, done, scores }) {
+function AdivinaAlineacion({ onFinish, done, scores, partido: ALINEACION }) {
   const [phase, setPhase] = useState("intro");
   const [timeLeft, setTimeLeft] = useState(120);
   const [found, setFound] = useState([]);
@@ -628,6 +555,13 @@ function AdivinaAlineacion({ onFinish, done, scores }) {
     setGuess("");
     setTimeout(() => setMsg(null), 1500);
   };
+
+  if (!ALINEACION) return (
+    <div className="card">
+      <div className="card-title">🏟 ADIVINA LA ALINEACIÓN</div>
+      <div className="alert alert-inf">⚠️ Aún no hay alineación cargada para hoy. Vuelve más tarde.</div>
+    </div>
+  );
 
   const pct = (timeLeft / 120) * 100;
   const barCls = pct > 50 ? "" : pct > 25 ? " warn" : " danger";
@@ -739,7 +673,7 @@ function AdivinaAlineacion({ onFinish, done, scores }) {
 }
 
 // ─── JUEGO 3: ADIVINA EL JUGADOR ─────────────────────────────────────────────
-function AdivinaJugador({ onFinish, done, scores }) {
+function AdivinaJugador({ onFinish, done, scores, jugador: JUGADOR }) {
   const [phase, setPhase] = useState("intro");
   const [pistasShown, setPistasShown] = useState(1);
   const [guess, setGuess] = useState("");
@@ -789,6 +723,13 @@ function AdivinaJugador({ onFinish, done, scores }) {
         </div>
       }
       onContinue={() => setShowOverlay(false)} />
+  );
+
+  if (!JUGADOR) return (
+    <div className="card">
+      <div className="card-title">⚽ ADIVINA EL JUGADOR</div>
+      <div className="alert alert-inf">⚠️ Aún no hay jugador cargado para hoy. Vuelve más tarde.</div>
+    </div>
   );
 
   if (done) return (
@@ -857,7 +798,7 @@ function AdivinaJugador({ onFinish, done, scores }) {
 }
 
 // ─── JUEGO 4: COMBINA ────────────────────────────────────────────────────────
-function Combina({ onFinish, done, scores }) {
+function Combina({ onFinish, done, scores, combinas: COMBINAS }) {
   const [phase, setPhase] = useState("intro");
   const [timeLeft, setTimeLeft] = useState(120);
   const [combIdx, setCombIdx] = useState(0);
@@ -937,6 +878,13 @@ function Combina({ onFinish, done, scores }) {
         </div>
       }
       onContinue={() => setShowOverlay(false)} />
+  );
+
+  if (!COMBINAS || COMBINAS.length === 0) return (
+    <div className="card">
+      <div className="card-title">🔍 COMBINA</div>
+      <div className="alert alert-inf">⚠️ Aún no hay combinaciones cargadas para hoy. Vuelve más tarde.</div>
+    </div>
   );
 
   if (done) return (
@@ -1155,7 +1103,77 @@ export default function App() {
   const [scores, setScores] = useState({ test: 0, alineacion: 0, jugador: 0, combina: 0 });
   const [done, setDone] = useState({ test: false, alineacion: false, jugador: false, combina: false });
 
+  // Contenido cargado desde Supabase
+  const [juegosActivos, setJuegosActivos] = useState({ test: false, alineacion: false, jugador: false, combina: false, gol: false });
+  const [preguntasHoy, setPreguntasHoy] = useState([]);
+  const [partidoHoy, setPartidoHoy] = useState(null);
+  const [jugadorHoy, setJugadorHoy] = useState(null);
+  const [combinasHoy, setCombinasHoy] = useState([]);
+  const [loadingContent, setLoadingContent] = useState(true);
+
   const totalPts = Object.values(scores).reduce((a, b) => a + b, 0);
+
+  // Carga el contenido del juego (preguntas, alineación, jugador, combinas) y qué juegos están activos
+  useEffect(() => {
+    const loadContent = async () => {
+      setLoadingContent(true);
+
+      const { data: ja } = await supabase.from("juegos_activos").select("*");
+      if (ja) {
+        const activos = {};
+        ja.forEach(j => { activos[j.id] = j.activo; });
+        setJuegosActivos(activos);
+      }
+
+      // 10 preguntas aleatorias: 4 fácil, 3 medio, 2 difícil, 1 muy difícil
+      const { data: pr } = await supabase.from("preguntas").select("*");
+      if (pr) {
+        const porNivel = (n) => pr.filter(p => p.nivel === n).sort(() => Math.random() - 0.5);
+        const elegidas = [
+          ...porNivel("facil").slice(0, 4),
+          ...porNivel("medio").slice(0, 3),
+          ...porNivel("dificil").slice(0, 2),
+          ...porNivel("muyDificil").slice(0, 1),
+        ].map(p => ({
+          q: p.texto, opts: p.opts, ans: p.ans, nivel: p.nivel,
+          pts: p.nivel === "facil" ? 25 : p.nivel === "medio" ? 50 : p.nivel === "dificil" ? 100 : 150,
+        }));
+        setPreguntasHoy(elegidas);
+      }
+
+      // Alineación aleatoria del banco
+      const { data: al } = await supabase.from("alineaciones").select("*");
+      if (al && al.length > 0) {
+        const elegida = al[Math.floor(Math.random() * al.length)];
+        setPartidoHoy({
+          equipo: elegida.equipo, rival: elegida.rival, competicion: elegida.competicion,
+          temporada: elegida.temporada, formacion: elegida.formacion, jugadores: elegida.jugadores,
+        });
+      }
+
+      // Jugador aleatorio del banco
+      const { data: ju } = await supabase.from("jugadores_adivina").select("*");
+      if (ju && ju.length > 0) {
+        const elegido = ju[Math.floor(Math.random() * ju.length)];
+        setJugadorHoy({
+          nombre: elegido.nombre, alias: elegido.alias || [],
+          pistaGeneral: elegido.pista_general, pistas: elegido.pistas,
+        });
+      }
+
+      // Combinaciones del banco
+      const { data: co } = await supabase.from("combinas").select("*");
+      if (co) {
+        setCombinasHoy(co.map(c => ({
+          desc: c.descripcion,
+          validar: (r) => c.validos.some(v => r.includes(v.toLowerCase())),
+        })));
+      }
+
+      setLoadingContent(false);
+    };
+    loadContent();
+  }, []);
 
   // Comprueba si ya hay una sesión activa al cargar la web
   useEffect(() => {
@@ -1271,6 +1289,13 @@ export default function App() {
     </div>
   );
 
+  if (loadingContent) return (
+    <div style={{ background: "#0a0a0f", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <style>{css}</style>
+      <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 24, color: "#4a9eff", letterSpacing: 2 }}>CARGANDO CONTENIDO...</div>
+    </div>
+  );
+
   const modes = [
     { id: "test",      icon: "✔",  name: "TEST DIARIO",            desc: "10 preguntas · Nivel progresivo · Bonus tiempo", maxPts: 600 },
     { id: "alineacion",icon: "🏟", name: "ADIVINA LA ALINEACIÓN",  desc: "2 minutos para los 11 jugadores",                maxPts: 200 },
@@ -1331,10 +1356,10 @@ export default function App() {
             </div>
           </>
         )}
-        {tab === "test"       && (JUEGOS_ACTIVOS.test       ? <TestDiario       done={done.test}       scores={scores} onFinish={(pts) => handleFinish("test", pts)} />       : <Proximamente icon="✔"  nombre="TEST DIARIO" />)}
-        {tab === "alineacion" && (JUEGOS_ACTIVOS.alineacion  ? <AdivinaAlineacion done={done.alineacion} scores={scores} onFinish={(pts) => handleFinish("alineacion", pts)} /> : <Proximamente icon="🏟" nombre="ADIVINA LA ALINEACIÓN" />)}
-        {tab === "jugador"    && (JUEGOS_ACTIVOS.jugador      ? <AdivinaJugador    done={done.jugador}    scores={scores} onFinish={(pts) => handleFinish("jugador", pts)} />    : <Proximamente icon="⚽" nombre="ADIVINA EL JUGADOR" />)}
-        {tab === "combina"    && (JUEGOS_ACTIVOS.combina      ? <Combina           done={done.combina}    scores={scores} onFinish={(pts) => handleFinish("combina", pts)} />    : <Proximamente icon="🔍" nombre="COMBINA" />)}
+        {tab === "test"       && (juegosActivos.test       ? <TestDiario       done={done.test}       scores={scores} preguntas={preguntasHoy} onFinish={(pts) => handleFinish("test", pts)} />       : <Proximamente icon="✔"  nombre="TEST DIARIO" />)}
+        {tab === "alineacion" && (juegosActivos.alineacion  ? <AdivinaAlineacion done={done.alineacion} scores={scores} partido={partidoHoy} onFinish={(pts) => handleFinish("alineacion", pts)} /> : <Proximamente icon="🏟" nombre="ADIVINA LA ALINEACIÓN" />)}
+        {tab === "jugador"    && (juegosActivos.jugador      ? <AdivinaJugador    done={done.jugador}    scores={scores} jugador={jugadorHoy} onFinish={(pts) => handleFinish("jugador", pts)} />    : <Proximamente icon="⚽" nombre="ADIVINA EL JUGADOR" />)}
+        {tab === "combina"    && (juegosActivos.combina      ? <Combina           done={done.combina}    scores={scores} combinas={combinasHoy} onFinish={(pts) => handleFinish("combina", pts)} />    : <Proximamente icon="🔍" nombre="COMBINA" />)}
         {tab === "gol"        && <AdivinaGol />}
         {tab === "ranking"    && <Ranking user={user} scores={scores} />}
       </main>

@@ -1,58 +1,5 @@
-import { useState } from "react";
-
-// ─── MOCK INITIAL DATA ────────────────────────────────────────────────────────
-const INIT = {
-  preguntas: [
-    { id: 1, texto: "¿Quién ganó el Mundial 2022?", opts: ["Francia", "Argentina", "Brasil", "Alemania"], ans: 1, nivel: "facil" },
-    { id: 2, texto: "¿Cuántos Balones de Oro tiene Messi?", opts: ["6", "7", "8", "9"], ans: 2, nivel: "medio" },
-    { id: 3, texto: "¿Quién marcó el gol de la final del Mundial 2010?", opts: ["Xavi", "Villa", "Iniesta", "Torres"], ans: 2, nivel: "dificil" },
-    { id: 4, texto: "¿Cuántos goles marcó Gerd Müller en el Mundial 1970?", opts: ["8", "9", "10", "7"], ans: 2, nivel: "muyDificil" },
-  ],
-  alineaciones: [
-    {
-      id: 1,
-      equipo: "REAL MADRID",
-      rival: "Atlético de Madrid",
-      competicion: "Champions League",
-      temporada: "2015/16",
-      formacion: "4-3-3",
-      jugadores: [
-        { pos: "POR", nombre: "Navas", alias: ["Keylor", "Keylor Navas"] },
-        { pos: "LD", nombre: "Carvajal", alias: ["Dani Carvajal"] },
-        { pos: "CB", nombre: "Pepe", alias: [] },
-        { pos: "CB", nombre: "Ramos", alias: ["Sergio Ramos"] },
-        { pos: "LI", nombre: "Marcelo", alias: [] },
-        { pos: "MC", nombre: "Casemiro", alias: ["Carlos Casemiro"] },
-        { pos: "MC", nombre: "Kroos", alias: ["Toni Kroos"] },
-        { pos: "MC", nombre: "Modric", alias: ["Luka Modric"] },
-        { pos: "EX", nombre: "Bale", alias: ["Gareth Bale"] },
-        { pos: "DC", nombre: "Benzema", alias: ["Karim Benzema", "KB9"] },
-        { pos: "EX", nombre: "Ronaldo", alias: ["CR7", "Cristiano", "Cristiano Ronaldo"] },
-      ],
-    },
-  ],
-  jugadores: [
-    {
-      id: 1,
-      nombre: "Kylian Mbappé",
-      alias: ["Mbappe", "Mbappé", "Kylian", "kylian mbappe"],
-      pistaGeneral: "🌟 Delantero | Menos de 30 años",
-      pistas: [
-        "Ganó el Mundial con tan solo 19 años",
-        "Su selección nacional es Francia 🇫🇷",
-        "Fue traspasado por más de 180M€",
-        "Club actual: Real Madrid",
-        "Nació en Bondy, París en 1998",
-      ],
-    },
-  ],
-  combinas: [
-    { id: 1, desc: "Balón de Oro + Barça", validos: ["messi", "rivaldo", "ronaldinho", "cruyff", "suarez", "luis suarez"] },
-    { id: 2, desc: "Brasil + Sevilla FC", validos: ["alves", "dani alves", "ganso", "luiz fabiano", "adriano"] },
-    { id: 3, desc: "Goleador + Premier League", validos: ["haaland", "salah", "kane", "henry", "shearer", "van nistelrooy"] },
-    { id: 4, desc: "Portero + España", validos: ["casillas", "de gea", "reina", "arrizabalaga", "oblak"] },
-  ],
-};
+import { useState, useEffect } from "react";
+import { supabase } from "./supabaseClient";
 
 // ─── STYLES ───────────────────────────────────────────────────────────────────
 const css = `
@@ -213,19 +160,32 @@ function SecPreguntas({ data, setData }) {
   const openNew = () => { setForm(empty); setEditing(null); setView("nueva"); };
   const openEdit = (p) => { setForm({ ...p, opts: [...p.opts] }); setEditing(p.id); setView("nueva"); };
 
-  const save = () => {
+  const save = async () => {
     if (!form.texto || form.opts.some(o => !o)) { showAlert("Completa todos los campos.", "ko"); return; }
     if (editing) {
+      const { error } = await supabase.from("preguntas").update({
+        texto: form.texto, opts: form.opts, ans: form.ans, nivel: form.nivel,
+      }).eq("id", editing);
+      if (error) { showAlert("Error: " + error.message, "ko"); return; }
       setData(d => d.map(p => p.id === editing ? { ...form, id: editing } : p));
       showAlert("Pregunta actualizada.");
     } else {
-      setData(d => [...d, { ...form, id: uid() }]);
+      const { data: inserted, error } = await supabase.from("preguntas").insert({
+        texto: form.texto, opts: form.opts, ans: form.ans, nivel: form.nivel,
+      }).select().single();
+      if (error) { showAlert("Error: " + error.message, "ko"); return; }
+      setData(d => [...d, inserted]);
       showAlert("Pregunta añadida.");
     }
     setView("lista"); setForm(empty); setEditing(null);
   };
 
-  const del = (id) => { if (confirm("¿Eliminar esta pregunta?")) setData(d => d.filter(p => p.id !== id)); };
+  const del = async (id) => {
+    if (!confirm("¿Eliminar esta pregunta?")) return;
+    const { error } = await supabase.from("preguntas").delete().eq("id", id);
+    if (error) { showAlert("Error: " + error.message, "ko"); return; }
+    setData(d => d.filter(p => p.id !== id));
+  };
 
   const nivelCount = (n) => data.filter(p => p.nivel === n).length;
 
@@ -344,14 +304,32 @@ function SecAlineaciones({ data, setData }) {
     setForm(f => ({ ...f, jugadores: j }));
   };
 
-  const save = () => {
+  const save = async () => {
     if (!form.equipo || !form.rival || form.jugadores.some(j => !j.nombre)) { showAlert("Completa todos los campos.", "ko"); return; }
-    if (editing) { setData(d => d.map(a => a.id === editing ? { ...form, id: editing } : a)); showAlert("Alineación actualizada."); }
-    else { setData(d => [...d, { ...form, id: uid() }]); showAlert("Alineación añadida."); }
+    const payload = {
+      equipo: form.equipo, rival: form.rival, competicion: form.competicion,
+      temporada: form.temporada, formacion: form.formacion, jugadores: form.jugadores,
+    };
+    if (editing) {
+      const { error } = await supabase.from("alineaciones").update(payload).eq("id", editing);
+      if (error) { showAlert("Error: " + error.message, "ko"); return; }
+      setData(d => d.map(a => a.id === editing ? { ...form, id: editing } : a));
+      showAlert("Alineación actualizada.");
+    } else {
+      const { data: inserted, error } = await supabase.from("alineaciones").insert(payload).select().single();
+      if (error) { showAlert("Error: " + error.message, "ko"); return; }
+      setData(d => [...d, inserted]);
+      showAlert("Alineación añadida.");
+    }
     setView("lista");
   };
 
-  const del = (id) => { if (confirm("¿Eliminar?")) setData(d => d.filter(a => a.id !== id)); };
+  const del = async (id) => {
+    if (!confirm("¿Eliminar?")) return;
+    const { error } = await supabase.from("alineaciones").delete().eq("id", id);
+    if (error) { showAlert("Error: " + error.message, "ko"); return; }
+    setData(d => d.filter(a => a.id !== id));
+  };
 
   return (
     <div>
@@ -455,14 +433,32 @@ function SecJugadores({ data, setData }) {
 
   const setPista = (i, v) => { const p = [...form.pistas]; p[i] = v; setForm(f => ({ ...f, pistas: p })); };
 
-  const save = () => {
+  const save = async () => {
     if (!form.nombre || !form.pistaGeneral || form.pistas.some(p => !p)) { showAlert("Completa todos los campos.", "ko"); return; }
-    if (editing) { setData(d => d.map(j => j.id === editing ? { ...form, id: editing } : j)); showAlert("Jugador actualizado."); }
-    else { setData(d => [...d, { ...form, id: uid() }]); showAlert("Jugador añadido."); }
+    const payload = {
+      nombre: form.nombre, alias: form.alias,
+      pista_general: form.pistaGeneral, pistas: form.pistas,
+    };
+    if (editing) {
+      const { error } = await supabase.from("jugadores_adivina").update(payload).eq("id", editing);
+      if (error) { showAlert("Error: " + error.message, "ko"); return; }
+      setData(d => d.map(j => j.id === editing ? { ...form, id: editing } : j));
+      showAlert("Jugador actualizado.");
+    } else {
+      const { data: inserted, error } = await supabase.from("jugadores_adivina").insert(payload).select().single();
+      if (error) { showAlert("Error: " + error.message, "ko"); return; }
+      setData(d => [...d, { ...form, id: inserted.id }]);
+      showAlert("Jugador añadido.");
+    }
     setView("lista");
   };
 
-  const del = (id) => { if (confirm("¿Eliminar?")) setData(d => d.filter(j => j.id !== id)); };
+  const del = async (id) => {
+    if (!confirm("¿Eliminar?")) return;
+    const { error } = await supabase.from("jugadores_adivina").delete().eq("id", id);
+    if (error) { showAlert("Error: " + error.message, "ko"); return; }
+    setData(d => d.filter(j => j.id !== id));
+  };
 
   const PTS = [300, 200, 150, 100, 50];
 
@@ -547,14 +543,29 @@ function SecCombinas({ data, setData }) {
   const openNew = () => { setForm(emptyForm); setEditing(null); setView("nueva"); };
   const openEdit = (c) => { setForm({ ...c, validos: [...c.validos] }); setEditing(c.id); setView("nueva"); };
 
-  const save = () => {
+  const save = async () => {
     if (!form.desc || form.validos.length === 0) { showAlert("Añade la combinación y al menos un jugador válido.", "ko"); return; }
-    if (editing) { setData(d => d.map(c => c.id === editing ? { ...form, id: editing } : c)); showAlert("Combinación actualizada."); }
-    else { setData(d => [...d, { ...form, id: uid() }]); showAlert("Combinación añadida."); }
+    const payload = { descripcion: form.desc, validos: form.validos };
+    if (editing) {
+      const { error } = await supabase.from("combinas").update(payload).eq("id", editing);
+      if (error) { showAlert("Error: " + error.message, "ko"); return; }
+      setData(d => d.map(c => c.id === editing ? { ...form, id: editing } : c));
+      showAlert("Combinación actualizada.");
+    } else {
+      const { data: inserted, error } = await supabase.from("combinas").insert(payload).select().single();
+      if (error) { showAlert("Error: " + error.message, "ko"); return; }
+      setData(d => [...d, { ...form, id: inserted.id }]);
+      showAlert("Combinación añadida.");
+    }
     setView("lista");
   };
 
-  const del = (id) => { if (confirm("¿Eliminar?")) setData(d => d.filter(c => c.id !== id)); };
+  const del = async (id) => {
+    if (!confirm("¿Eliminar?")) return;
+    const { error } = await supabase.from("combinas").delete().eq("id", id);
+    if (error) { showAlert("Error: " + error.message, "ko"); return; }
+    setData(d => d.filter(c => c.id !== id));
+  };
 
   return (
     <div>
@@ -651,14 +662,56 @@ export default function Admin() {
   const [pwErr, setPwErr] = useState(false);
   const [sec, setSec] = useState("activar");
   const [juegosActivos, setJuegosActivos] = useState({ test: false, alineacion: false, jugador: false, combina: false, gol: false });
+  const [loadingData, setLoadingData] = useState(true);
 
-  const [preguntas, setPreguntas] = useState(INIT.preguntas);
-  const [alineaciones, setAlineaciones] = useState(INIT.alineaciones);
-  const [jugadores, setJugadores] = useState(INIT.jugadores);
-  const [combinas, setCombinas] = useState(INIT.combinas);
+  const [preguntas, setPreguntas] = useState([]);
+  const [alineaciones, setAlineaciones] = useState([]);
+  const [jugadores, setJugadores] = useState([]);
+  const [combinas, setCombinas] = useState([]);
+
+  // Carga todos los datos desde Supabase cuando el admin inicia sesión
+  useEffect(() => {
+    if (!loggedIn) return;
+    const loadAll = async () => {
+      setLoadingData(true);
+
+      const { data: pr } = await supabase.from("preguntas").select("*").order("created_at");
+      setPreguntas((pr || []).map(p => ({ id: p.id, texto: p.texto, opts: p.opts, ans: p.ans, nivel: p.nivel })));
+
+      const { data: al } = await supabase.from("alineaciones").select("*").order("created_at");
+      setAlineaciones((al || []).map(a => ({
+        id: a.id, equipo: a.equipo, rival: a.rival, competicion: a.competicion,
+        temporada: a.temporada, formacion: a.formacion, jugadores: a.jugadores,
+      })));
+
+      const { data: ju } = await supabase.from("jugadores_adivina").select("*").order("created_at");
+      setJugadores((ju || []).map(j => ({
+        id: j.id, nombre: j.nombre, alias: j.alias || [], pistaGeneral: j.pista_general, pistas: j.pistas,
+      })));
+
+      const { data: co } = await supabase.from("combinas").select("*").order("created_at");
+      setCombinas((co || []).map(c => ({ id: c.id, desc: c.descripcion, validos: c.validos })));
+
+      const { data: ja } = await supabase.from("juegos_activos").select("*");
+      if (ja) {
+        const activos = {};
+        ja.forEach(j => { activos[j.id] = j.activo; });
+        setJuegosActivos(activos);
+      }
+
+      setLoadingData(false);
+    };
+    loadAll();
+  }, [loggedIn]);
+
+  const toggleJuego = async (id) => {
+    const nuevoEstado = !juegosActivos[id];
+    const { error } = await supabase.from("juegos_activos").update({ activo: nuevoEstado }).eq("id", id);
+    if (!error) setJuegosActivos(a => ({ ...a, [id]: nuevoEstado }));
+  };
 
   const handleLogin = () => {
-    if (pw === "admin123") { setLoggedIn(true); setPwErr(false); }
+    if (pw === "Scrumfit2026!") { setLoggedIn(true); setPwErr(false); }
     else setPwErr(true);
   };
 
@@ -667,15 +720,21 @@ export default function Admin() {
       <style>{css}</style>
       <div style={{ width: "100%", maxWidth: 340, background: "#111d14", border: "1px solid #1e3d25", borderRadius: 14, padding: 32 }}>
         <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 28, color: "#a8ff3e", letterSpacing: 2, marginBottom: 4 }}>PANEL ADMIN</div>
-        <div style={{ fontSize: 12, color: "#6b8f71", marginBottom: 24 }}>Más Fútbol · Acceso restringido</div>
+        <div style={{ fontSize: 12, color: "#6b8f71", marginBottom: 24 }}>Goal Win · Acceso restringido</div>
         {pwErr && <div className="alert alert-ko">Contraseña incorrecta.</div>}
         <label className="lbl">Contraseña de administrador</label>
         <input className="inp" type="password" placeholder="••••••••" value={pw}
           onChange={e => setPw(e.target.value)} onKeyDown={e => e.key === "Enter" && handleLogin()}
           style={{ marginBottom: 14 }} />
         <button className="btn-add" style={{ width: "100%" }} onClick={handleLogin}>ENTRAR</button>
-        <div style={{ fontSize: 11, color: "#6b8f71", marginTop: 12, textAlign: "center" }}>Contraseña demo: admin123</div>
       </div>
+    </div>
+  );
+
+  if (loadingData) return (
+    <div style={{ background: "#0a0a0f", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <style>{css}</style>
+      <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 22, color: "#a8ff3e", letterSpacing: 2 }}>CARGANDO DATOS...</div>
     </div>
   );
 
@@ -732,7 +791,7 @@ export default function Admin() {
                     {juegosActivos[j.id] ? "✔ ACTIVO" : "✖ INACTIVO"}
                   </span>
                   <button
-                    onClick={() => setJuegosActivos(a => ({ ...a, [j.id]: !a[j.id] }))}
+                    onClick={() => toggleJuego(j.id)}
                     style={{
                       background: juegosActivos[j.id] ? "#e74c3c22" : "#a8ff3e22",
                       border: `1px solid ${juegosActivos[j.id] ? "#e74c3c" : "#a8ff3e"}`,
