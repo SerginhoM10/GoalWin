@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { supabase } from "./supabaseClient";
 
 // ─── MOCK DATA ─────────────────────────────────────────────────────────────────
 const PREGUNTAS = {
@@ -1147,24 +1148,96 @@ export default function App() {
   const [authMode, setAuthMode] = useState("login");
   const [authForm, setAuthForm] = useState({ email: "", password: "", nombre: "" });
   const [authErr, setAuthErr] = useState("");
+  const [authMsg, setAuthMsg] = useState("");
+  const [authLoading, setAuthLoading] = useState(false);
+  const [checkingSession, setCheckingSession] = useState(true);
   const [tab, setTab] = useState("inicio");
   const [scores, setScores] = useState({ test: 0, alineacion: 0, jugador: 0, combina: 0 });
   const [done, setDone] = useState({ test: false, alineacion: false, jugador: false, combina: false });
 
   const totalPts = Object.values(scores).reduce((a, b) => a + b, 0);
 
+  // Comprueba si ya hay una sesión activa al cargar la web
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        setUser({
+          email: session.user.email,
+          nombre: session.user.user_metadata?.nombre || session.user.email.split("@")[0],
+        });
+      }
+      setCheckingSession(false);
+    });
+
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        setUser({
+          email: session.user.email,
+          nombre: session.user.user_metadata?.nombre || session.user.email.split("@")[0],
+        });
+      } else {
+        setUser(null);
+      }
+    });
+
+    return () => listener.subscription.unsubscribe();
+  }, []);
+
   const handleFinish = (game, pts) => {
     setScores(s => ({ ...s, [game]: pts }));
     setDone(d => ({ ...d, [game]: true }));
   };
 
-  const handleAuth = () => {
+  const handleAuth = async () => {
+    setAuthErr("");
+    setAuthMsg("");
     if (!authForm.email || !authForm.password) { setAuthErr("Completa todos los campos."); return; }
     if (authMode === "register" && !authForm.nombre) { setAuthErr("Introduce un apodo."); return; }
-    const nombre = authMode === "register" ? authForm.nombre : authForm.email.split("@")[0];
-    setUser({ email: authForm.email, nombre });
-    setAuthErr("");
+    if (authForm.password.length < 6) { setAuthErr("La contraseña debe tener al menos 6 caracteres."); return; }
+
+    setAuthLoading(true);
+
+    if (authMode === "register") {
+      const { data, error } = await supabase.auth.signUp({
+        email: authForm.email,
+        password: authForm.password,
+        options: { data: { nombre: authForm.nombre } },
+      });
+      setAuthLoading(false);
+      if (error) { setAuthErr(error.message); return; }
+      setAuthMsg("¡Cuenta creada! Revisa tu email para confirmar tu cuenta antes de iniciar sesión.");
+      setAuthMode("login");
+    } else {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: authForm.email,
+        password: authForm.password,
+      });
+      setAuthLoading(false);
+      if (error) {
+        if (error.message.includes("Email not confirmed")) {
+          setAuthErr("Debes confirmar tu email antes de entrar. Revisa tu correo.");
+        } else if (error.message.includes("Invalid login")) {
+          setAuthErr("Email o contraseña incorrectos.");
+        } else {
+          setAuthErr(error.message);
+        }
+        return;
+      }
+      // El listener de onAuthStateChange se encarga de meter al usuario
+    }
   };
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setUser(null);
+  };
+
+  if (checkingSession) return (
+    <div style={{ background: "#0a0a0f", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <style>{css}</style>
+      <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 24, color: "#4a9eff", letterSpacing: 2 }}>CARGANDO...</div>
+    </div>
+  );
 
   if (!user) return (
     <div style={{ background: "#0a0a0f", minHeight: "100vh" }}>
@@ -1174,6 +1247,7 @@ export default function App() {
           <div className="login-logo">GOAL <em>WIN</em></div>
           <div className="login-tag">Pon a prueba tu conocimiento del deporte rey. Sé constante cada día para conseguir premios exclusivos cada semana.</div>
           {authErr && <div className="alert alert-ko">{authErr}</div>}
+          {authMsg && <div className="alert alert-ok">{authMsg}</div>}
           {authMode === "register" && (
             <><label className="inp-lbl">Apodo</label>
             <input className="inp" placeholder="Tu nombre en el ranking"
@@ -1183,10 +1257,13 @@ export default function App() {
           <input className="inp" type="email" placeholder="tu@email.com"
             value={authForm.email} onChange={e => setAuthForm(f => ({ ...f, email: e.target.value }))} />
           <label className="inp-lbl">Contraseña</label>
-          <input className="inp" type="password" placeholder="••••••••"
-            value={authForm.password} onChange={e => setAuthForm(f => ({ ...f, password: e.target.value }))} />
-          <button className="btn-main" onClick={handleAuth}>{authMode === "login" ? "ENTRAR AL CAMPO" : "CREAR CUENTA"}</button>
-          <button className="btn-sub" onClick={() => { setAuthMode(m => m === "login" ? "register" : "login"); setAuthErr(""); }}>
+          <input className="inp" type="password" placeholder="•••••••• (mínimo 6 caracteres)"
+            value={authForm.password} onChange={e => setAuthForm(f => ({ ...f, password: e.target.value }))}
+            onKeyDown={e => e.key === "Enter" && handleAuth()} />
+          <button className="btn-main" onClick={handleAuth} disabled={authLoading}>
+            {authLoading ? "CARGANDO..." : authMode === "login" ? "ENTRAR AL CAMPO" : "CREAR CUENTA"}
+          </button>
+          <button className="btn-sub" onClick={() => { setAuthMode(m => m === "login" ? "register" : "login"); setAuthErr(""); setAuthMsg(""); }}>
             {authMode === "login" ? "¿No tienes cuenta? Regístrate" : "¿Ya tienes cuenta? Inicia sesión"}
           </button>
         </div>
@@ -1210,7 +1287,7 @@ export default function App() {
         <div className="hdr-right">
           <span className="hdr-user">{user.nombre}</span>
           <span className="hdr-pts">⚡ {totalPts}</span>
-          <button className="btn-out" onClick={() => setUser(null)}>Salir</button>
+          <button className="btn-out" onClick={handleLogout}>Salir</button>
         </div>
       </header>
       <nav className="nav">
