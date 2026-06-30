@@ -626,30 +626,46 @@ function SecCombinas({ data, setData }) {
 
 // USUARIOS (mock)
 function SecUsuarios() {
-  const usuarios = [
-    { nombre: "CrackTotal", email: "crack@mail.com", pts: 2840, racha: 7, fecha: "Hoy 14:23" },
-    { nombre: "MadridistaPro", email: "madrid@mail.com", pts: 2710, racha: 5, fecha: "Hoy 13:11" },
-    { nombre: "BalónDeOro10", email: "balon@mail.com", pts: 2590, racha: 6, fecha: "Hoy 12:45" },
-  ];
+  const [usuarios, setUsuarios] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const load = async () => {
+      const { data, error } = await supabase
+        .from("perfiles")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (!error) setUsuarios(data || []);
+      setLoading(false);
+    };
+    load();
+  }, []);
+
   return (
     <div>
       <div className="page-title">👥 USUARIOS</div>
-      <div className="page-sub">Usuarios registrados · {usuarios.length} en total (demo)</div>
+      <div className="page-sub">Usuarios registrados en Goal Win · {usuarios.length} en total</div>
       <div className="card">
-        <table className="tbl">
-          <thead><tr><th>Usuario</th><th>Email</th><th>Puntos hoy</th><th>Racha</th><th>Último acceso</th></tr></thead>
-          <tbody>
-            {usuarios.map((u, i) => (
-              <tr key={i}>
-                <td><strong>{u.nombre}</strong></td>
-                <td style={{ color: "#6b8f71" }}>{u.email}</td>
-                <td><span style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 18, color: "#a8ff3e" }}>{u.pts}</span></td>
-                <td>🔥 {u.racha} días</td>
-                <td style={{ color: "#6b8f71", fontSize: 12 }}>{u.fecha}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        {loading ? (
+          <div className="empty">Cargando usuarios...</div>
+        ) : usuarios.length === 0 ? (
+          <div className="empty">Aún no hay usuarios registrados.</div>
+        ) : (
+          <table className="tbl">
+            <thead><tr><th>Usuario</th><th>Puntos totales</th><th>Puntos semana</th><th>Racha</th><th>Registrado</th></tr></thead>
+            <tbody>
+              {usuarios.map((u, i) => (
+                <tr key={i}>
+                  <td><strong>{u.nombre}</strong></td>
+                  <td><span style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 18, color: "#a8ff3e" }}>{u.puntos_totales}</span></td>
+                  <td>{u.puntos_semana}</td>
+                  <td>🔥 {u.racha} días</td>
+                  <td style={{ color: "#6b8f71", fontSize: 12 }}>{new Date(u.created_at).toLocaleDateString("es-ES")}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
     </div>
   );
