@@ -2,13 +2,36 @@ import { useState, useEffect, useRef } from "react";
 import { supabase } from "./supabaseClient";
 
 // ─── BONUS TIEMPO (Test) ────────────────────────────────────────────────────
-// Si el tiempo total del test <= 7s → 500 pts extra
-// Por cada segundo adicional desde 7 → resta 25 pts
-// A partir de 31s → 0 pts extra
 function timeBonus(totalSeconds) {
   if (totalSeconds <= 7) return 500;
   if (totalSeconds >= 31) return 0;
   return 500 - (totalSeconds - 7) * 25;
+}
+
+// ─── SEMILLA DIARIA ─────────────────────────────────────────────────────────
+// Genera un número pseudoaleatorio basado en la fecha del día
+// Así todos los usuarios ven las mismas preguntas cada día y cambian a las 00:00h
+function seedRandom(seed) {
+  let s = seed;
+  return () => {
+    s = (s * 1664525 + 1013904223) & 0xffffffff;
+    return (s >>> 0) / 0xffffffff;
+  };
+}
+
+function getTodaySeed() {
+  const hoy = new Date();
+  return hoy.getFullYear() * 10000 + (hoy.getMonth() + 1) * 100 + hoy.getDate();
+}
+
+function shuffleWithSeed(arr, seed) {
+  const rand = seedRandom(seed);
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(rand() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
 }
 
 // ─── STYLES ───────────────────────────────────────────────────────────────────
@@ -1117,15 +1140,35 @@ export default function App() {
         setJuegosActivos(activos);
       }
 
-      // 10 preguntas aleatorias: 4 fácil, 3 medio, 2 difícil, 1 muy difícil
+      // ── Semilla basada en la fecha de hoy (cambia a las 00:00h) ──────────
+      // Todos los usuarios ven el mismo contenido el mismo día
+      const hoy = new Date();
+      const semilla = hoy.getFullYear() * 10000 + (hoy.getMonth() + 1) * 100 + hoy.getDate();
+
+      // Generador de números pseudoaleatorios determinista (seeded)
+      const seededRand = (seed) => {
+        let s = seed;
+        return () => {
+          s = (s * 1664525 + 1013904223) & 0xffffffff;
+          return (s >>> 0) / 0xffffffff;
+        };
+      };
+
+      const sortSeeded = (arr, seed) => {
+        const rand = seededRand(seed);
+        return [...arr].sort(() => rand() - 0.5);
+      };
+
+      // 10 preguntas del día: 4 fácil, 3 medio, 2 difícil, 1 muy difícil
       const { data: pr } = await supabase.from("preguntas").select("*");
       if (pr) {
-        const porNivel = (n) => pr.filter(p => p.nivel === n).sort(() => Math.random() - 0.5);
+        const porNivel = (n, offset) =>
+          sortSeeded(pr.filter(p => p.nivel === n), semilla + offset);
         const elegidas = [
-          ...porNivel("facil").slice(0, 4),
-          ...porNivel("medio").slice(0, 3),
-          ...porNivel("dificil").slice(0, 2),
-          ...porNivel("muyDificil").slice(0, 1),
+          ...porNivel("facil", 1).slice(0, 4),
+          ...porNivel("medio", 2).slice(0, 3),
+          ...porNivel("dificil", 3).slice(0, 2),
+          ...porNivel("muyDificil", 4).slice(0, 1),
         ].map(p => ({
           q: p.texto, opts: p.opts, ans: p.ans, nivel: p.nivel,
           pts: p.nivel === "facil" ? 25 : p.nivel === "medio" ? 50 : p.nivel === "dificil" ? 100 : 150,
@@ -1133,30 +1176,35 @@ export default function App() {
         setPreguntasHoy(elegidas);
       }
 
-      // Alineación aleatoria del banco
+      // Alineación del día
       const { data: al } = await supabase.from("alineaciones").select("*");
       if (al && al.length > 0) {
-        const elegida = al[Math.floor(Math.random() * al.length)];
+        const rand = seededRand(semilla + 10);
+        const idx = Math.floor(rand() * al.length);
+        const elegida = al[idx];
         setPartidoHoy({
           equipo: elegida.equipo, rival: elegida.rival, competicion: elegida.competicion,
           temporada: elegida.temporada, formacion: elegida.formacion, jugadores: elegida.jugadores,
         });
       }
 
-      // Jugador aleatorio del banco
+      // Jugador del día
       const { data: ju } = await supabase.from("jugadores_adivina").select("*");
       if (ju && ju.length > 0) {
-        const elegido = ju[Math.floor(Math.random() * ju.length)];
+        const rand = seededRand(semilla + 20);
+        const idx = Math.floor(rand() * ju.length);
+        const elegido = ju[idx];
         setJugadorHoy({
           nombre: elegido.nombre, alias: elegido.alias || [],
           pistaGeneral: elegido.pista_general, pistas: elegido.pistas,
         });
       }
 
-      // Combinaciones del banco
+      // Combinaciones del banco (todas disponibles, el orden cambia cada día)
       const { data: co } = await supabase.from("combinas").select("*");
       if (co) {
-        setCombinasHoy(co.map(c => ({
+        const ordenadas = sortSeeded(co, semilla + 30);
+        setCombinasHoy(ordenadas.map(c => ({
           desc: c.descripcion,
           validar: (r) => c.validos.some(v => r.includes(v.toLowerCase())),
         })));
