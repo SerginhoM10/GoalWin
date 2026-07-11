@@ -45,217 +45,217 @@ function shuffleWithSeed(arr, seed) {
 
 // ─── STYLES ───────────────────────────────────────────────────────────────────
 const css = `
-@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap');
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-body { background: linear-gradient(135deg, #05080f 0%, #0a1020 50%, #050d1a 100%); background-attachment: fixed; color: #e8f0ff; font-family: 'Inter', sans-serif; min-height: 100vh; }
+body { background: #000000; color: #f2f2f2; font-family: 'Inter', sans-serif; min-height: 100vh; }
 .app { min-height: 100vh; display: flex; flex-direction: column; }
 
 /* HEADER */
-.hdr { background: #05080f; border-bottom: 1px solid #1a2a45; padding: 0 20px; height: 56px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 200; }
-.hdr-logo { font-family: 'Bebas Neue', sans-serif; font-size: 26px; letter-spacing: 2px; color: #4a9eff; }
-.hdr-logo span { color: #e8f0ff; }
+.hdr { background: #000000; border-bottom: 1px solid #2a2a2a; padding: 0 20px; height: 56px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 200; }
+.hdr-logo { font-family: 'Space Mono', monospace; font-weight: 700; font-size: 22px; letter-spacing: 1px; color: #ffb400; }
+.hdr-logo span { color: #f2f2f2; }
 .hdr-right { display: flex; align-items: center; gap: 10px; }
-.hdr-user { font-size: 13px; color: #4a6080; }
-.hdr-pts { font-family: 'Bebas Neue', sans-serif; font-size: 18px; color: #f5c518; }
-.btn-out { background: none; border: 1px solid #1a2a45; color: #4a6080; border-radius: 6px; padding: 3px 10px; font-size: 12px; cursor: pointer; }
-.btn-out:hover { color: #e8f0ff; }
+.hdr-user { font-size: 13px; color: #7a7a7a; }
+.hdr-pts { font-family: 'Space Mono', monospace; font-weight: 700; font-size: 17px; color: #ffb400; }
+.btn-out { background: none; border: 1px solid #2a2a2a; color: #7a7a7a; border-radius: 4px; padding: 3px 10px; font-size: 12px; cursor: pointer; }
+.btn-out:hover { color: #f2f2f2; }
 
 /* NAV */
-.nav { background: #0a1020; border-bottom: 1px solid #1a2a45; display: flex; overflow-x: auto; }
+.nav { background: #0a0a0a; border-bottom: 1px solid #2a2a2a; display: flex; overflow-x: auto; }
 .nav::-webkit-scrollbar { display: none; }
-.nav-btn { background: none; border: none; color: #4a6080; padding: 13px 14px; font-size: 11px; font-weight: 600; cursor: pointer; white-space: nowrap; border-bottom: 2px solid transparent; font-family: 'Inter', sans-serif; text-transform: uppercase; transition: all 0.15s; letter-spacing: 0.5px; }
-.nav-btn:hover { color: #e8f0ff; }
-.nav-btn.on { color: #4a9eff; border-bottom-color: #4a9eff; }
+.nav-btn { background: none; border: none; color: #7a7a7a; padding: 13px 14px; font-size: 11px; font-weight: 600; cursor: pointer; white-space: nowrap; border-bottom: 2px solid transparent; font-family: 'Inter', sans-serif; text-transform: uppercase; transition: all 0.15s; letter-spacing: 0.5px; }
+.nav-btn:hover { color: #f2f2f2; }
+.nav-btn.on { color: #ffb400; border-bottom-color: #ffb400; }
 
 /* MAIN */
 .main { flex: 1; padding: 20px 16px; max-width: 680px; margin: 0 auto; width: 100%; }
 
 /* LOGIN */
-.login-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #05080f; padding: 20px; }
+.login-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #000000; padding: 20px; }
 .login-box { width: 100%; max-width: 380px; }
-.login-logo { font-family: 'Bebas Neue', sans-serif; font-size: 52px; letter-spacing: 4px; color: #4a9eff; text-align: center; line-height: 1; }
-.login-logo em { color: #e8f0ff; font-style: normal; }
-.login-tag { text-align: center; color: #7a9abf; font-size: 16px; line-height: 1.6; margin: 14px 0 32px; }
-.inp-lbl { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #4a6080; margin-bottom: 6px; display: block; }
-.inp { width: 100%; background: #0a1020; border: 1px solid #1a2a45; border-radius: 8px; padding: 11px 14px; color: #e8f0ff; font-size: 14px; font-family: 'Inter', sans-serif; outline: none; margin-bottom: 14px; transition: border-color 0.15s; }
-.inp:focus { border-color: #4a9eff; }
-.btn-main { width: 100%; background: #4a9eff; color: #0a0a0f; border: none; border-radius: 8px; padding: 13px; font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 1px; cursor: pointer; }
-.btn-main:hover { background: #c0ff70; }
-.btn-sub { width: 100%; background: none; border: 1px solid #1a2a45; color: #4a6080; border-radius: 8px; padding: 10px; font-size: 13px; cursor: pointer; margin-top: 10px; font-family: 'Inter', sans-serif; }
-.btn-sub:hover { color: #e8f0ff; }
+.login-logo { font-family: 'Space Mono', monospace; font-weight: 700; font-size: 42px; letter-spacing: 2px; color: #ffb400; text-align: center; line-height: 1; }
+.login-logo em { color: #f2f2f2; font-style: normal; }
+.login-tag { text-align: center; color: #9a9a9a; font-size: 16px; line-height: 1.6; margin: 14px 0 32px; }
+.inp-lbl { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #7a7a7a; margin-bottom: 6px; display: block; }
+.inp { width: 100%; background: #0a0a0a; border: 1px solid #2a2a2a; border-radius: 6px; padding: 11px 14px; color: #f2f2f2; font-size: 14px; font-family: 'Inter', sans-serif; outline: none; margin-bottom: 14px; transition: border-color 0.15s; }
+.inp:focus { border-color: #ffb400; }
+.btn-main { width: 100%; background: #ffb400; color: #1a1200; border: none; border-radius: 6px; padding: 13px; font-family: 'Space Mono', monospace; font-weight: 700; font-size: 17px; letter-spacing: 1px; cursor: pointer; }
+.btn-main:hover { background: #ffc733; }
+.btn-sub { width: 100%; background: none; border: 1px solid #2a2a2a; color: #7a7a7a; border-radius: 6px; padding: 10px; font-size: 13px; cursor: pointer; margin-top: 10px; font-family: 'Inter', sans-serif; }
+.btn-sub:hover { color: #f2f2f2; }
 
 /* CARD */
-.card { background: #0d1525; border: 1px solid #1a2a45; border-radius: 14px; padding: 22px; margin-bottom: 16px; }
-.card-title { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 1px; color: #4a9eff; margin-bottom: 4px; }
-.card-sub { font-size: 12px; color: #4a6080; margin-bottom: 18px; }
+.card { background: #0a0a0a; border: 1px solid #2a2a2a; border-radius: 10px; padding: 22px; margin-bottom: 16px; }
+.card-title { font-family: 'Space Mono', monospace; font-weight: 700; font-size: 19px; letter-spacing: 0.5px; color: #ffb400; margin-bottom: 4px; }
+.card-sub { font-size: 12px; color: #7a7a7a; margin-bottom: 18px; }
 
 /* INTRO OVERLAY */
-.overlay { position: fixed; inset: 0; background: #05080fdd; display: flex; align-items: center; justify-content: center; z-index: 300; padding: 20px; }
-.intro-box { background: #0d1525; border: 1px solid #1a2a45; border-radius: 16px; padding: 32px; max-width: 420px; width: 100%; text-align: center; }
+.overlay { position: fixed; inset: 0; background: #000000dd; display: flex; align-items: center; justify-content: center; z-index: 300; padding: 20px; }
+.intro-box { background: #0a0a0a; border: 1px solid #2a2a2a; border-radius: 12px; padding: 32px; max-width: 420px; width: 100%; text-align: center; }
 .intro-icon { font-size: 56px; margin-bottom: 16px; }
-.intro-title { font-family: 'Bebas Neue', sans-serif; font-size: 30px; color: #4a9eff; letter-spacing: 2px; margin-bottom: 12px; }
-.intro-text { font-size: 14px; color: #7a9abf; line-height: 1.7; margin-bottom: 24px; }
-.btn-green { background: #1a3a6b; color: #e8f0ff; border: none; border-radius: 8px; padding: 12px 32px; font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 1px; cursor: pointer; }
-.btn-green:hover { background: #2260c0; }
-.btn-rojo { background: #2a101044; color: #e74c3c; border: 1px solid #e74c3c55; border-radius: 8px; padding: 8px 16px; font-size: 13px; cursor: pointer; font-family: 'Inter', sans-serif; }
-.btn-rojo:hover { background: #e74c3c22; }
+.intro-title { font-family: 'Space Mono', monospace; font-weight: 700; font-size: 25px; color: #ffb400; letter-spacing: 1px; margin-bottom: 12px; }
+.intro-text { font-size: 14px; color: #9a9a9a; line-height: 1.7; margin-bottom: 24px; }
+.btn-green { background: #3a2900; color: #ffb400; border: 1px solid #ffb40044; border-radius: 6px; padding: 12px 32px; font-family: 'Space Mono', monospace; font-weight: 700; font-size: 17px; letter-spacing: 1px; cursor: pointer; }
+.btn-green:hover { background: #4a3400; }
+.btn-rojo { background: #2a0a0a; color: #ff3b3b; border: 1px solid #ff3b3b55; border-radius: 6px; padding: 8px 16px; font-size: 13px; cursor: pointer; font-family: 'Inter', sans-serif; }
+.btn-rojo:hover { background: #3a1010; }
 
 /* COUNTDOWN */
-.countdown { font-family: 'Bebas Neue', sans-serif; font-size: 120px; color: #4a9eff; text-align: center; padding: 60px 0; text-shadow: 0 0 40px #a8ff3e88; }
+.countdown { font-family: 'Space Mono', monospace; font-weight: 700; font-size: 110px; color: #ffb400; text-align: center; padding: 60px 0; }
 
 /* RESULT OVERLAY */
-.result-overlay-pts { font-family: 'Bebas Neue', sans-serif; font-size: 80px; color: #4a9eff; text-align: center; letter-spacing: 2px; text-shadow: 0 0 30px #a8ff3e55; line-height: 1; }
-.result-overlay-lbl { text-align: center; color: #4a6080; font-size: 13px; margin: 6px 0 20px; }
+.result-overlay-pts { font-family: 'Space Mono', monospace; font-weight: 700; font-size: 70px; color: #ffb400; text-align: center; letter-spacing: 1px; line-height: 1; }
+.result-overlay-lbl { text-align: center; color: #7a7a7a; font-size: 13px; margin: 6px 0 20px; }
 .result-mini-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
-.rms { background: #05080f; border: 1px solid #1a2a45; border-radius: 10px; padding: 12px; text-align: center; }
-.rms-val { font-family: 'Bebas Neue', sans-serif; font-size: 22px; color: #e8f0ff; }
-.rms-lbl { font-size: 11px; color: #4a6080; margin-top: 2px; }
+.rms { background: #000000; border: 1px solid #2a2a2a; border-radius: 8px; padding: 12px; text-align: center; }
+.rms-val { font-family: 'Space Mono', monospace; font-weight: 700; font-size: 20px; color: #f2f2f2; }
+.rms-lbl { font-size: 11px; color: #7a7a7a; margin-top: 2px; }
 .result-overlay-btns { display: flex; flex-direction: column; gap: 8px; }
 
 /* TEST */
 .nivel-badge { display: inline-block; border-radius: 4px; padding: 2px 10px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
-.nivel-facil    { background: #2260c022; color: #22a050; border: 1px solid #22a05044; }
-.nivel-medio    { background: #f5c51822; color: #f5c518; border: 1px solid #f5c51844; }
-.nivel-dificil  { background: #e74c3c22; color: #e74c3c; border: 1px solid #e74c3c44; }
-.nivel-muyDificil { background: #9b59b622; color: #9b59b6; border: 1px solid #9b59b644; }
-.q-num { font-size: 12px; color: #4a6080; margin-bottom: 6px; }
-.q-text { font-family: 'Bebas Neue', sans-serif; font-size: 26px; line-height: 1.2; color: #e8f0ff; margin-bottom: 22px; }
+.nivel-facil    { background: #ffb40015; color: #ffb400; border: 1px solid #ffb40044; }
+.nivel-medio    { background: #ffb40022; color: #ffb400; border: 1px solid #ffb40055; }
+.nivel-dificil  { background: #ff3b3b1a; color: #ff3b3b; border: 1px solid #ff3b3b44; }
+.nivel-muyDificil { background: #ff3b3b30; color: #ff3b3b; border: 1px solid #ff3b3b66; }
+.q-num { font-size: 12px; color: #7a7a7a; margin-bottom: 6px; }
+.q-text { font-family: 'Space Mono', monospace; font-weight: 700; font-size: 22px; line-height: 1.3; color: #f2f2f2; margin-bottom: 22px; }
 .opts { display: flex; flex-direction: column; gap: 9px; }
-.opt { background: #05080f; border: 1.5px solid #1a2a45; border-radius: 10px; padding: 13px 16px; color: #b0c8e8; font-size: 14px; cursor: pointer; text-align: left; font-family: 'Inter', sans-serif; transition: all 0.12s; display: flex; align-items: center; gap: 12px; }
-.opt:hover:not(:disabled) { border-color: #4a9eff; color: #e8f0ff; }
-.opt.ok { background: #1a2a4a; border-color: #22a050; color: #4a9eff; }
-.opt.ko { background: #2a1010; border-color: #e74c3c; color: #e74c3c; }
+.opt { background: #000000; border: 1.5px solid #2a2a2a; border-radius: 8px; padding: 13px 16px; color: #c8c8c8; font-size: 14px; cursor: pointer; text-align: left; font-family: 'Inter', sans-serif; transition: all 0.12s; display: flex; align-items: center; gap: 12px; }
+.opt:hover:not(:disabled) { border-color: #ffb400; color: #f2f2f2; }
+.opt.ok { background: #ffb40015; border-color: #ffb400; color: #ffb400; }
+.opt.ko { background: #ff3b3b15; border-color: #ff3b3b; color: #ff3b3b; }
 .opt:disabled { cursor: default; }
-.opt-letra { font-family: 'Bebas Neue', sans-serif; font-size: 16px; color: #4a6080; min-width: 18px; }
+.opt-letra { font-family: 'Space Mono', monospace; font-weight: 700; font-size: 14px; color: #7a7a7a; min-width: 18px; }
 .progress-row { display: flex; gap: 4px; margin-bottom: 18px; }
-.progress-dot { height: 4px; flex: 1; border-radius: 2px; background: #1a2a45; }
-.progress-dot.done { background: #2260c0; }
-.progress-dot.current { background: #4a9eff; }
-.racha-badge { display: inline-flex; align-items: center; gap: 6px; background: #f5c51815; border: 1px solid #f5c51840; border-radius: 20px; padding: 4px 12px; font-size: 13px; color: #f5c518; font-weight: 700; margin-bottom: 14px; }
+.progress-dot { height: 4px; flex: 1; border-radius: 2px; background: #2a2a2a; }
+.progress-dot.done { background: #7a5200; }
+.progress-dot.current { background: #ffb400; }
+.racha-badge { display: inline-flex; align-items: center; gap: 6px; background: #ffb40015; border: 1px solid #ffb40040; border-radius: 20px; padding: 4px 12px; font-size: 13px; color: #ffb400; font-weight: 700; margin-bottom: 14px; }
 .score-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-.score-live { font-family: 'Bebas Neue', sans-serif; font-size: 28px; color: #4a9eff; }
+.score-live { font-family: 'Space Mono', monospace; font-weight: 700; font-size: 24px; color: #ffb400; }
 
 /* RESULT FINAL TEST */
-.result-pts-big { font-family: 'Bebas Neue', sans-serif; font-size: 72px; color: #4a9eff; text-align: center; text-shadow: 0 0 30px #a8ff3e55; }
-.result-sub { text-align: center; color: #4a6080; font-size: 13px; margin-bottom: 6px; }
+.result-pts-big { font-family: 'Space Mono', monospace; font-weight: 700; font-size: 62px; color: #ffb400; text-align: center; }
+.result-sub { text-align: center; color: #7a7a7a; font-size: 13px; margin-bottom: 6px; }
 .result-grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin: 18px 0; }
-.rs { background: #05080f; border: 1px solid #1a2a45; border-radius: 10px; padding: 14px; text-align: center; }
-.rs-val { font-family: 'Bebas Neue', sans-serif; font-size: 28px; color: #e8f0ff; }
-.rs-lbl { font-size: 11px; color: #4a6080; margin-top: 2px; }
+.rs { background: #000000; border: 1px solid #2a2a2a; border-radius: 8px; padding: 14px; text-align: center; }
+.rs-val { font-family: 'Space Mono', monospace; font-weight: 700; font-size: 24px; color: #f2f2f2; }
+.rs-lbl { font-size: 11px; color: #7a7a7a; margin-top: 2px; }
 .answer-review { display: flex; flex-direction: column; gap: 6px; margin-bottom: 20px; }
 .ar { padding: 10px 14px; border-radius: 8px; font-size: 13px; display: flex; align-items: flex-start; gap: 8px; }
-.ar-ok { background: #1a2a4a44; border: 1px solid #22a05033; color: #a8d8b0; }
-.ar-ko { background: #2a101044; border: 1px solid #e74c3c33; color: #e8a0a0; }
-.rank-summary { background: #05080f; border: 1px solid #f5c51833; border-radius: 10px; padding: 14px; margin-bottom: 16px; }
-.rank-summary-title { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #4a6080; margin-bottom: 10px; }
-.rank-summary-row { display: flex; justify-content: space-between; font-size: 13px; padding: 5px 0; border-bottom: 1px solid #1a2a4533; }
+.ar-ok { background: #ffb40012; border: 1px solid #ffb40033; color: #e8c98a; }
+.ar-ko { background: #ff3b3b12; border: 1px solid #ff3b3b33; color: #e8a0a0; }
+.rank-summary { background: #000000; border: 1px solid #ffb40033; border-radius: 8px; padding: 14px; margin-bottom: 16px; }
+.rank-summary-title { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #7a7a7a; margin-bottom: 10px; }
+.rank-summary-row { display: flex; justify-content: space-between; font-size: 13px; padding: 5px 0; border-bottom: 1px solid #2a2a2a33; }
 .rank-summary-row:last-child { border-bottom: none; }
 
 /* ALINEACION */
-.campo { background: linear-gradient(180deg, #05080f 0%, #080d1a 40%, #05080f 100%); border: 1px solid #1a2a45; border-radius: 12px; padding: 16px 12px; margin-bottom: 16px; position: relative; }
-.campo::after { content: ''; position: absolute; top: 50%; left: 8%; right: 8%; height: 1px; background: #ffffff15; }
+.campo { background: #050505; border: 1px solid #2a2a2a; border-radius: 10px; padding: 16px 12px; margin-bottom: 16px; position: relative; }
+.campo::after { content: ''; position: absolute; top: 50%; left: 8%; right: 8%; height: 1px; background: #ffffff12; }
 .campo-row { display: flex; justify-content: space-around; margin-bottom: 14px; }
 .camp-player { display: flex; flex-direction: column; align-items: center; gap: 5px; }
-.camp-circle { width: 44px; height: 44px; border-radius: 50%; border: 2px solid #1a2a45; background: #05080f; display: flex; align-items: center; justify-content: center; font-size: 20px; transition: all 0.2s; }
-.camp-circle.found { background: #1a3a6b; border-color: #4a9eff; box-shadow: 0 0 12px #a8ff3e44; }
-.camp-name { font-size: 10px; color: #4a6080; text-align: center; max-width: 56px; }
-.camp-name.found { color: #4a9eff; font-weight: 700; }
+.camp-circle { width: 44px; height: 44px; border-radius: 50%; border: 2px solid #2a2a2a; background: #000000; display: flex; align-items: center; justify-content: center; font-size: 20px; transition: all 0.2s; }
+.camp-circle.found { background: #3a2900; border-color: #ffb400; }
+.camp-name { font-size: 10px; color: #7a7a7a; text-align: center; max-width: 56px; }
+.camp-name.found { color: #ffb400; font-weight: 700; }
 .ali-info { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 12px; }
-.ali-form { color: #4a9eff; font-family: 'Bebas Neue', sans-serif; font-size: 18px; }
-.ali-partido { text-align: right; color: #4a6080; line-height: 1.6; }
-.ali-partido strong { color: #e8f0ff; }
+.ali-form { color: #ffb400; font-family: 'Space Mono', monospace; font-weight: 700; font-size: 16px; }
+.ali-partido { text-align: right; color: #7a7a7a; line-height: 1.6; }
+.ali-partido strong { color: #f2f2f2; }
 .guess-row { display: flex; gap: 8px; margin-bottom: 12px; }
-.guess-inp { flex: 1; background: #05080f; border: 1px solid #1a2a45; border-radius: 8px; padding: 10px 14px; color: #e8f0ff; font-size: 14px; font-family: 'Inter', sans-serif; outline: none; }
-.guess-inp:focus { border-color: #4a9eff; }
-.btn-send { background: #1a3a6b; color: #e8f0ff; border: none; border-radius: 8px; padding: 10px 18px; font-weight: 700; cursor: pointer; font-family: 'Inter', sans-serif; }
-.btn-send:hover { background: #2260c0; }
+.guess-inp { flex: 1; background: #000000; border: 1px solid #2a2a2a; border-radius: 6px; padding: 10px 14px; color: #f2f2f2; font-size: 14px; font-family: 'Inter', sans-serif; outline: none; }
+.guess-inp:focus { border-color: #ffb400; }
+.btn-send { background: #3a2900; color: #ffb400; border: 1px solid #ffb40044; border-radius: 6px; padding: 10px 18px; font-weight: 700; cursor: pointer; font-family: 'Inter', sans-serif; }
+.btn-send:hover { background: #4a3400; }
 .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
-.tag-ok { background: #1a2a4a44; border: 1px solid #22a05044; border-radius: 14px; padding: 3px 10px; font-size: 12px; color: #4a9eff; }
-.tag-ko { background: #2a101044; border: 1px solid #e74c3c44; border-radius: 14px; padding: 3px 10px; font-size: 12px; color: #e74c3c; }
-.timer-bar-wrap { height: 6px; background: #1a2a45; border-radius: 3px; margin-bottom: 14px; overflow: hidden; }
-.timer-bar { height: 6px; border-radius: 3px; background: #4a9eff; transition: width 1s linear, background 0.5s; }
-.timer-bar.warn { background: #f5c518; }
-.timer-bar.danger { background: #e74c3c; }
-.timer-txt { font-family: 'Bebas Neue', sans-serif; font-size: 22px; color: #e8f0ff; margin-bottom: 6px; }
+.tag-ok { background: #ffb40015; border: 1px solid #ffb40044; border-radius: 14px; padding: 3px 10px; font-size: 12px; color: #ffb400; }
+.tag-ko { background: #ff3b3b15; border: 1px solid #ff3b3b44; border-radius: 14px; padding: 3px 10px; font-size: 12px; color: #ff3b3b; }
+.timer-bar-wrap { height: 6px; background: #2a2a2a; border-radius: 3px; margin-bottom: 14px; overflow: hidden; }
+.timer-bar { height: 6px; border-radius: 3px; background: #ffb400; transition: width 1s linear, background 0.5s; }
+.timer-bar.warn { background: #ff8a00; }
+.timer-bar.danger { background: #ff3b3b; }
+.timer-txt { font-family: 'Space Mono', monospace; font-weight: 700; font-size: 20px; color: #f2f2f2; margin-bottom: 6px; }
 
 /* JUGADOR */
 .sil-wrap { display: flex; flex-direction: column; align-items: center; margin-bottom: 16px; }
 .sil { font-size: 80px; filter: brightness(0) invert(0.15); }
-.pista-gen { background: #0a1020; border: 1px solid #1a2a45; border-radius: 8px; padding: 10px 16px; font-size: 13px; color: #7a9abf; margin-bottom: 14px; text-align: center; }
+.pista-gen { background: #0a0a0a; border: 1px solid #2a2a2a; border-radius: 6px; padding: 10px 16px; font-size: 13px; color: #9a9a9a; margin-bottom: 14px; text-align: center; }
 .pistas { display: flex; flex-direction: column; gap: 8px; margin-bottom: 18px; }
-.pista { background: #05080f; border-left: 3px solid #1a6b3a; border-radius: 6px; padding: 10px 14px; font-size: 13px; color: #b0c8e8; animation: fadeIn 0.3s ease; }
+.pista { background: #000000; border-left: 3px solid #ffb400; border-radius: 4px; padding: 10px 14px; font-size: 13px; color: #c8c8c8; animation: fadeIn 0.3s ease; }
 @keyframes fadeIn { from { opacity: 0; transform: translateX(-8px); } to { opacity: 1; transform: none; } }
-.pista-num { font-size: 10px; color: #4a6080; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 1px; }
+.pista-num { font-size: 10px; color: #7a7a7a; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 1px; }
 .tries-dots { display: flex; gap: 6px; margin-bottom: 14px; align-items: center; }
-.dot { width: 12px; height: 12px; border-radius: 50%; background: #1a2a45; border: 1px solid #2d5a35; }
-.dot.used { background: #e74c3c; border-color: #e74c3c; }
-.dot.won { background: #4a9eff; border-color: #4a9eff; }
+.dot { width: 12px; height: 12px; border-radius: 50%; background: #2a2a2a; border: 1px solid #3a3a3a; }
+.dot.used { background: #ff3b3b; border-color: #ff3b3b; }
+.dot.won { background: #ffb400; border-color: #ffb400; }
 
 /* COMBINA */
-.comb-reto { background: #05080f; border: 2px solid #a8ff3e44; border-radius: 12px; padding: 20px; text-align: center; margin-bottom: 18px; }
-.comb-reto-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #4a6080; margin-bottom: 8px; }
-.comb-reto-txt { font-family: 'Bebas Neue', sans-serif; font-size: 32px; color: #4a9eff; letter-spacing: 1px; }
+.comb-reto { background: #000000; border: 2px solid #ff3b3b44; border-radius: 10px; padding: 20px; text-align: center; margin-bottom: 18px; }
+.comb-reto-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #7a7a7a; margin-bottom: 8px; }
+.comb-reto-txt { font-family: 'Space Mono', monospace; font-weight: 700; font-size: 28px; color: #ffb400; letter-spacing: 1px; }
 .comb-pts-row { display: flex; justify-content: center; gap: 24px; margin-bottom: 18px; }
 .comb-stat { text-align: center; }
-.comb-val { font-family: 'Bebas Neue', sans-serif; font-size: 32px; }
-.comb-lbl { font-size: 11px; color: #4a6080; }
-.float-anim { animation: floatUp 0.6s ease forwards; position: fixed; pointer-events: none; font-family: 'Bebas Neue', sans-serif; font-size: 26px; z-index: 999; }
+.comb-val { font-family: 'Space Mono', monospace; font-weight: 700; font-size: 28px; }
+.comb-lbl { font-size: 11px; color: #7a7a7a; }
+.float-anim { animation: floatUp 0.6s ease forwards; position: fixed; pointer-events: none; font-family: 'Space Mono', monospace; font-weight: 700; font-size: 24px; z-index: 999; }
 @keyframes floatUp { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-60px); } }
-.btn-salto { background: #2a101044; color: #e74c3c; border: 1px solid #e74c3c44; border-radius: 8px; padding: 10px 16px; font-size: 14px; cursor: pointer; font-family: 'Inter', sans-serif; font-weight: 600; }
+.btn-salto { background: #2a0a0a; color: #ff3b3b; border: 1px solid #ff3b3b44; border-radius: 6px; padding: 10px 16px; font-size: 14px; cursor: pointer; font-family: 'Inter', sans-serif; font-weight: 600; }
 .comb-history { display: flex; flex-direction: column; gap: 5px; margin-bottom: 14px; max-height: 150px; overflow-y: auto; }
 .ch-row { padding: 7px 12px; border-radius: 6px; font-size: 13px; display: flex; justify-content: space-between; }
-.ch-ok { background: #1a2a4a44; color: #4a9eff; }
-.ch-ko { background: #2a101044; color: #e74c3c; }
+.ch-ok { background: #ffb40015; color: #ffb400; }
+.ch-ko { background: #ff3b3b15; color: #ff3b3b; }
 
 /* RANKING */
-.rank-tabs { display: flex; border-radius: 8px; overflow: hidden; border: 1px solid #1a2a45; margin-bottom: 18px; }
-.rank-tab { flex: 1; background: none; border: none; color: #4a6080; padding: 10px; font-size: 13px; cursor: pointer; font-family: 'Inter', sans-serif; font-weight: 600; text-transform: uppercase; }
-.rank-tab.on { background: #1a3a6b; color: #e8f0ff; }
-.rank-row { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 10px; margin-bottom: 8px; background: #05080f; border: 1px solid #1a2a4522; cursor: pointer; transition: all 0.15s; }
-.rank-row:hover { background: #0d1525; }
-.rank-row.top3 { border-color: #f5c51833; }
-.rank-row.me { border-color: #4a9eff44; background: #4a9eff08; }
-.rank-pos { font-family: 'Bebas Neue', sans-serif; font-size: 22px; width: 30px; text-align: center; }
-.pos-1 { color: #f5c518; } .pos-2 { color: #c0c0c0; } .pos-3 { color: #cd7f32; }
+.rank-tabs { display: flex; border-radius: 6px; overflow: hidden; border: 1px solid #2a2a2a; margin-bottom: 18px; }
+.rank-tab { flex: 1; background: none; border: none; color: #7a7a7a; padding: 10px; font-size: 13px; cursor: pointer; font-family: 'Inter', sans-serif; font-weight: 600; text-transform: uppercase; }
+.rank-tab.on { background: #3a2900; color: #ffb400; }
+.rank-row { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 8px; margin-bottom: 8px; background: #000000; border: 1px solid #2a2a2a22; cursor: pointer; transition: all 0.15s; }
+.rank-row:hover { background: #0a0a0a; }
+.rank-row.top3 { border-color: #ffd70033; }
+.rank-row.me { border-color: #ffb40044; background: #ffb40008; }
+.rank-pos { font-family: 'Space Mono', monospace; font-weight: 700; font-size: 20px; width: 30px; text-align: center; }
+.pos-1 { color: #ffd700; } .pos-2 { color: #c0c0c0; } .pos-3 { color: #cd7f32; }
 .rank-name { flex: 1; font-size: 14px; font-weight: 500; }
-.rank-pts { font-family: 'Bebas Neue', sans-serif; font-size: 20px; color: #4a9eff; }
-.rank-prize { font-size: 11px; color: #f5c518; }
-.desglose { background: #0a1020; border: 1px solid #1a2a45; border-radius: 10px; padding: 16px; margin-top: 4px; margin-bottom: 10px; }
-.des-row { display: flex; justify-content: space-between; font-size: 13px; padding: 6px 0; border-bottom: 1px solid #1a2a4533; }
+.rank-pts { font-family: 'Space Mono', monospace; font-weight: 700; font-size: 18px; color: #ffb400; }
+.rank-prize { font-size: 11px; color: #ffd700; }
+.desglose { background: #0a0a0a; border: 1px solid #2a2a2a; border-radius: 8px; padding: 16px; margin-top: 4px; margin-bottom: 10px; }
+.des-row { display: flex; justify-content: space-between; font-size: 13px; padding: 6px 0; border-bottom: 1px solid #2a2a2a33; }
 .des-row:last-child { border-bottom: none; }
-.des-lbl { color: #4a6080; }
-.des-val { font-family: 'Bebas Neue', sans-serif; font-size: 16px; color: #e8f0ff; }
+.des-lbl { color: #7a7a7a; }
+.des-val { font-family: 'Space Mono', monospace; font-weight: 700; font-size: 15px; color: #f2f2f2; }
 
 /* INICIO */
-.home-hero { background: linear-gradient(135deg, #05080f, #0a1020); border: 1px solid #1a2a45; border-radius: 16px; padding: 28px; margin-bottom: 18px; text-align: center; }
-.home-pts { font-family: 'Bebas Neue', sans-serif; font-size: 64px; color: #4a9eff; line-height: 1; text-shadow: 0 0 30px #a8ff3e44; }
-.home-pts-lbl { font-size: 13px; color: #4a6080; margin-top: 4px; }
+.home-hero { background: #0a0a0a; border: 1px solid #2a2a2a; border-radius: 12px; padding: 28px; margin-bottom: 18px; text-align: center; }
+.home-pts { font-family: 'Space Mono', monospace; font-weight: 700; font-size: 56px; color: #ffb400; line-height: 1; }
+.home-pts-lbl { font-size: 13px; color: #7a7a7a; margin-top: 4px; }
 .mode-list { display: flex; flex-direction: column; gap: 10px; }
-.mode-item { background: #0a1020; border: 1px solid #1a2a45; border-radius: 12px; padding: 16px 18px; display: flex; align-items: center; gap: 14px; cursor: pointer; transition: all 0.15s; }
-.mode-item:hover { border-color: #4a9eff44; background: #0d1525; }
+.mode-item { background: #0a0a0a; border: 1px solid #2a2a2a; border-radius: 10px; padding: 16px 18px; display: flex; align-items: center; gap: 14px; cursor: pointer; transition: all 0.15s; }
+.mode-item:hover { border-color: #ffb40044; background: #111111; }
 .mode-icon { font-size: 30px; }
-.mode-name { font-family: 'Bebas Neue', sans-serif; font-size: 18px; color: #e8f0ff; }
-.mode-desc { font-size: 12px; color: #4a6080; margin-top: 2px; }
-.mode-pts { font-family: 'Bebas Neue', sans-serif; font-size: 18px; color: #4a9eff; margin-left: auto; }
+.mode-name { font-family: 'Space Mono', monospace; font-weight: 700; font-size: 16px; color: #f2f2f2; }
+.mode-desc { font-size: 12px; color: #7a7a7a; margin-top: 2px; }
+.mode-pts { font-family: 'Space Mono', monospace; font-weight: 700; font-size: 16px; color: #ffb400; margin-left: auto; }
 .mode-done { font-size: 20px; margin-left: auto; }
 
 /* PRÓXIMAMENTE */
 .prox-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 20px; text-align: center; }
 .prox-icon { font-size: 72px; margin-bottom: 20px; }
-.prox-title { font-family: 'Bebas Neue', sans-serif; font-size: 28px; color: #4a9eff; letter-spacing: 2px; margin-bottom: 10px; }
-.prox-text { font-size: 15px; color: #4a6080; line-height: 1.6; }
+.prox-title { font-family: 'Space Mono', monospace; font-weight: 700; font-size: 24px; color: #ffb400; letter-spacing: 1px; margin-bottom: 10px; }
+.prox-text { font-size: 15px; color: #7a7a7a; line-height: 1.6; }
 
-.alert { border-radius: 8px; padding: 10px 14px; font-size: 13px; margin-bottom: 12px; }
-.alert-ok  { background: #1a2a4a44; border: 1px solid #22a05044; color: #4a9eff; }
-.alert-ko  { background: #2a101044; border: 1px solid #e74c3c44; color: #e74c3c; }
-.alert-inf { background: #1a2a4a44; border: 1px solid #4a7aaf44; color: #88b8e8; }
-.divider { border: none; border-top: 1px solid #1a2a45; margin: 18px 0; }
-.dia-badge { font-size: 11px; background: #1a2a45; color: #4a6080; border-radius: 4px; padding: 2px 8px; margin-left: 8px; }
+.alert { border-radius: 6px; padding: 10px 14px; font-size: 13px; margin-bottom: 12px; }
+.alert-ok  { background: #ffb40015; border: 1px solid #ffb40044; color: #ffb400; }
+.alert-ko  { background: #ff3b3b15; border: 1px solid #ff3b3b44; color: #ff3b3b; }
+.alert-inf { background: #ffffff0a; border: 1px solid #ffffff22; color: #c8c8c8; }
+.divider { border: none; border-top: 1px solid #2a2a2a; margin: 18px 0; }
+.dia-badge { font-size: 11px; background: #2a2a2a; color: #9a9a9a; border-radius: 4px; padding: 2px 8px; margin-left: 8px; }
 
 @media (max-width: 480px) {
   .result-grid3 { grid-template-columns: 1fr 1fr; }
-  .q-text { font-size: 20px; }
-  .home-pts { font-size: 48px; }
+  .q-text { font-size: 19px; }
+  .home-pts { font-size: 44px; }
   .main { padding: 14px 12px; }
 }
 `;
@@ -297,23 +297,23 @@ function FinishOverlay({ icon, juego, pts, ptsBreakdown, scores, onContinue }) {
     <div className="overlay">
       <div className="intro-box" style={{ maxWidth: 360 }}>
         <div style={{ fontSize: 48, marginBottom: 10 }}>{icon}</div>
-        <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 13, color: "#4a6080", letterSpacing: 2, marginBottom: 6, textTransform: "uppercase" }}>{juego} · Resultado</div>
-        <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 90, color: "#4a9eff", lineHeight: 1, textShadow: "0 0 30px #4a9eff55", marginBottom: 4 }}>{pts}</div>
-        <div style={{ fontSize: 13, color: "#4a6080", marginBottom: 20 }}>puntos conseguidos</div>
+        <div style={{ fontFamily: "'Space Mono',monospace", fontSize: 13, color: "#7a7a7a", letterSpacing: 2, marginBottom: 6, textTransform: "uppercase" }}>{juego} · Resultado</div>
+        <div style={{ fontFamily: "'Space Mono',monospace", fontSize: 90, color: "#ffb400", lineHeight: 1, textShadow: "0 0 30px #ffb40055", marginBottom: 4 }}>{pts}</div>
+        <div style={{ fontSize: 13, color: "#7a7a7a", marginBottom: 20 }}>puntos conseguidos</div>
         {ptsBreakdown && (
-          <div style={{ background: "#05080f", border: "1px solid #1a2a45", borderRadius: 10, padding: "12px 16px", marginBottom: 16, width: "100%" }}>
+          <div style={{ background: "#000000", border: "1px solid #2a2a2a", borderRadius: 10, padding: "12px 16px", marginBottom: 16, width: "100%" }}>
             {ptsBreakdown}
           </div>
         )}
-        <div style={{ background: "#05080f", border: "1px solid #f5c51833", borderRadius: 10, padding: "12px 16px", marginBottom: 20, width: "100%" }}>
-          <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: 1, color: "#4a6080", marginBottom: 10 }}>Tu acumulado de hoy</div>
+        <div style={{ background: "#000000", border: "1px solid #ffd70033", borderRadius: 10, padding: "12px 16px", marginBottom: 20, width: "100%" }}>
+          <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: 1, color: "#7a7a7a", marginBottom: 10 }}>Tu acumulado de hoy</div>
           <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14, marginBottom: 6 }}>
-            <span style={{ color: "#7a9abf" }}>Este juego</span>
-            <span style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 18, color: "#4a9eff" }}>{pts} pts</span>
+            <span style={{ color: "#9a9a9a" }}>Este juego</span>
+            <span style={{ fontFamily: "'Space Mono',monospace", fontSize: 18, color: "#ffb400" }}>{pts} pts</span>
           </div>
           <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14 }}>
-            <span style={{ color: "#7a9abf" }}>Total ranking hoy</span>
-            <span style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 18, color: "#f5c518" }}>{total} pts</span>
+            <span style={{ color: "#9a9a9a" }}>Total ranking hoy</span>
+            <span style={{ fontFamily: "'Space Mono',monospace", fontSize: 18, color: "#ffd700" }}>{total} pts</span>
           </div>
         </div>
         <button className="btn-green" style={{ width: "100%", background: "#1a3a6b" }} onClick={onContinue}>VER RANKING →</button>
@@ -328,14 +328,14 @@ function ResultOverlay({ pts, juego, scores, onVerRanking, onClose, extras }) {
   return (
     <div className="overlay">
       <div className="intro-box">
-        <div style={{ fontSize: 13, color: "#6b8f71", textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>{juego}</div>
+        <div style={{ fontSize: 13, color: "#7a7a7a", textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>{juego}</div>
         <div className="result-overlay-pts">{pts}</div>
         <div className="result-overlay-lbl">puntos conseguidos</div>
         {extras}
         <div className="rank-summary">
           <div className="rank-summary-title">Tu acumulado de hoy</div>
-          <div className="rank-summary-row"><span style={{ color: "#9ab09e" }}>Puntos totales hoy</span><span style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 18, color: "#a8ff3e" }}>{totalDiario}</span></div>
-          <div className="rank-summary-row"><span style={{ color: "#9ab09e" }}>Posición estimada</span><span style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 18, color: "#f5c518" }}>#4</span></div>
+          <div className="rank-summary-row"><span style={{ color: "#7a7a7a" }}>Puntos totales hoy</span><span style={{ fontFamily: "'Space Mono',monospace", fontSize: 18, color: "#ffb400" }}>{totalDiario}</span></div>
+          <div className="rank-summary-row"><span style={{ color: "#7a7a7a" }}>Posición estimada</span><span style={{ fontFamily: "'Space Mono',monospace", fontSize: 18, color: "#ffd700" }}>#4</span></div>
         </div>
         <div className="result-overlay-btns">
           <button className="btn-green" onClick={onVerRanking}>VER RANKING</button>
@@ -353,12 +353,12 @@ function Proximamente({ icon, nombre }) {
       <div className="prox-wrap">
         <div className="prox-icon">{icon}</div>
         <div className="prox-title">{nombre}</div>
-        <div style={{ background: "#0a1020", border: "1px solid #1a2a45", borderRadius: 12, padding: "20px 24px", margin: "16px 0", textAlign: "center" }}>
+        <div style={{ background: "#0a0a0a", border: "1px solid #2a2a2a", borderRadius: 12, padding: "20px 24px", margin: "16px 0", textAlign: "center" }}>
           <div style={{ fontSize: 32, marginBottom: 10 }}>🔧</div>
-          <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 22, color: "#4a9eff", letterSpacing: 1, marginBottom: 8 }}>ESTAMOS PREPARANDO EL JUEGO</div>
-          <div style={{ fontSize: 14, color: "#7a9abf", lineHeight: 1.7 }}>Estamos trabajando para ofrecerte la mejor experiencia.<br />Vuelve pronto, ¡no te lo pierdas!</div>
+          <div style={{ fontFamily: "'Space Mono',monospace", fontSize: 22, color: "#ffb400", letterSpacing: 1, marginBottom: 8 }}>ESTAMOS PREPARANDO EL JUEGO</div>
+          <div style={{ fontSize: 14, color: "#9a9a9a", lineHeight: 1.7 }}>Estamos trabajando para ofrecerte la mejor experiencia.<br />Vuelve pronto, ¡no te lo pierdas!</div>
         </div>
-        <div style={{ fontSize: 12, color: "#4a6080", textAlign: "center" }}>
+        <div style={{ fontSize: 12, color: "#7a7a7a", textAlign: "center" }}>
           Síguenos para estar al tanto del lanzamiento 🚀
         </div>
       </div>
@@ -451,17 +451,17 @@ function TestDiario({ onFinish, done, scores, preguntas }) {
       ptsBreakdown={
         <div>
           <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, marginBottom: 4 }}>
-            <span style={{ color: "#7a9abf" }}>Puntos base</span>
+            <span style={{ color: "#9a9a9a" }}>Puntos base</span>
             <span style={{ color: "#e8f0ff" }}>{baseScore} pts</span>
           </div>
           {finalPts > baseScore && (
             <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13 }}>
-              <span style={{ color: "#7a9abf" }}>Bonus tiempo (¡10/10!)</span>
-              <span style={{ color: "#f5c518" }}>+{finalPts - baseScore} pts</span>
+              <span style={{ color: "#9a9a9a" }}>Bonus tiempo (¡10/10!)</span>
+              <span style={{ color: "#ffd700" }}>+{finalPts - baseScore} pts</span>
             </div>
           )}
           {finalPts === baseScore && (
-            <div style={{ fontSize: 12, color: "#4a6080", marginTop: 4 }}>
+            <div style={{ fontSize: 12, color: "#7a7a7a", marginTop: 4 }}>
               Bonus tiempo solo si aciertas las 10
             </div>
           )}
@@ -486,10 +486,10 @@ function TestDiario({ onFinish, done, scores, preguntas }) {
       </div>
       <div className="rank-summary">
         <div className="rank-summary-title">Acumulado ranking de hoy</div>
-        <div className="rank-summary-row"><span style={{ color: "#7a9abf" }}>✔ Test Diario</span><span style={{ color: "#4a9eff", fontFamily: "'Bebas Neue',sans-serif", fontSize: 16 }}>{finalPts} pts</span></div>
-        <div className="rank-summary-row"><span style={{ color: "#7a9abf" }}>Total acumulado hoy</span><span style={{ color: "#f5c518", fontFamily: "'Bebas Neue',sans-serif", fontSize: 16 }}>{Object.values(scores).reduce((a,b)=>a+b,0) + finalPts} pts</span></div>
+        <div className="rank-summary-row"><span style={{ color: "#9a9a9a" }}>✔ Test Diario</span><span style={{ color: "#ffb400", fontFamily: "'Space Mono',monospace", fontSize: 16 }}>{finalPts} pts</span></div>
+        <div className="rank-summary-row"><span style={{ color: "#9a9a9a" }}>Total acumulado hoy</span><span style={{ color: "#ffd700", fontFamily: "'Space Mono',monospace", fontSize: 16 }}>{Object.values(scores).reduce((a,b)=>a+b,0) + finalPts} pts</span></div>
       </div>
-      <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 14, color: "#4a6080", letterSpacing: 1, marginBottom: 10 }}>REVISIÓN DE RESPUESTAS</div>
+      <div style={{ fontFamily: "'Space Mono',monospace", fontSize: 14, color: "#7a7a7a", letterSpacing: 1, marginBottom: 10 }}>REVISIÓN DE RESPUESTAS</div>
       <div className="answer-review">
         {answers.map((a, i) => (
           <div key={i} className={`ar ${a.correct ? "ar-ok" : "ar-ko"}`}>
@@ -639,7 +639,7 @@ function AdivinaAlineacion({ onFinish, done, scores, partido: ALINEACION }) {
   if (showOverlay) return (
     <FinishOverlay icon="🏟" juego="Adivina la Alineación" pts={finalPts} scores={scores}
       ptsBreakdown={
-        <div style={{ fontSize: 13, color: "#7a9abf" }}>
+        <div style={{ fontSize: 13, color: "#9a9a9a" }}>
           {found.length === 11 ? "¡Alineación completa! 200 pts" :
            found.length >= 5  ? `${found.length}/11 jugadores · 150 pts` :
            found.length >= 2  ? `${found.length}/11 jugadores · 50 pts` :
@@ -665,11 +665,11 @@ function AdivinaAlineacion({ onFinish, done, scores, partido: ALINEACION }) {
       </div>
       <div className="rank-summary">
         <div className="rank-summary-title">Acumulado ranking de hoy</div>
-        <div className="rank-summary-row"><span style={{ color: "#7a9abf" }}>🏟 Alineación</span><span style={{ color: "#4a9eff", fontFamily: "'Bebas Neue',sans-serif", fontSize: 16 }}>{finalPts} pts</span></div>
-        <div className="rank-summary-row"><span style={{ color: "#7a9abf" }}>Total acumulado hoy</span><span style={{ color: "#f5c518", fontFamily: "'Bebas Neue',sans-serif", fontSize: 16 }}>{Object.values(scores).reduce((a,b)=>a+b,0) + finalPts} pts</span></div>
+        <div className="rank-summary-row"><span style={{ color: "#9a9a9a" }}>🏟 Alineación</span><span style={{ color: "#ffb400", fontFamily: "'Space Mono',monospace", fontSize: 16 }}>{finalPts} pts</span></div>
+        <div className="rank-summary-row"><span style={{ color: "#9a9a9a" }}>Total acumulado hoy</span><span style={{ color: "#ffd700", fontFamily: "'Space Mono',monospace", fontSize: 16 }}>{Object.values(scores).reduce((a,b)=>a+b,0) + finalPts} pts</span></div>
       </div>
       <div style={{ marginBottom: 12 }}>
-        <div style={{ fontSize: 12, color: "#4a6080", marginBottom: 8 }}>Alineación completa:</div>
+        <div style={{ fontSize: 12, color: "#7a7a7a", marginBottom: 8 }}>Alineación completa:</div>
         <div className="tags">{ALINEACION.jugadores.map((j, i) => (
           <span key={i} className={found.find(f => f.nombre === j.nombre) ? "tag-ok" : "tag-ko"}>{j.nombre}</span>
         ))}</div>
@@ -690,7 +690,7 @@ function AdivinaAlineacion({ onFinish, done, scores, partido: ALINEACION }) {
       <div className="timer-bar-wrap"><div className={`timer-bar${barCls}`} style={{ width: `${pct}%` }} /></div>
       {msg && <div className={`alert alert-${msg.type === "ok" ? "ok" : "ko"}`}>{msg.text}</div>}
       {ALINEACION.foto_url && (
-        <div style={{ marginBottom: 12, borderRadius: 10, overflow: "hidden", border: "1px solid #1a2a45", aspectRatio: "16 / 9", width: "100%" }}>
+        <div style={{ marginBottom: 12, borderRadius: 10, overflow: "hidden", border: "1px solid #2a2a2a", aspectRatio: "16 / 9", width: "100%" }}>
           <img src={ALINEACION.foto_url} alt="Foto del partido" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
         </div>
       )}
@@ -709,7 +709,7 @@ function AdivinaAlineacion({ onFinish, done, scores, partido: ALINEACION }) {
           </div>
         ))}
       </div>
-      <div style={{ fontSize: 12, color: "#6b8f71", marginBottom: 10 }}>{found.length}/11 encontrados · {calcPts(found)} pts actuales</div>
+      <div style={{ fontSize: 12, color: "#7a7a7a", marginBottom: 10 }}>{found.length}/11 encontrados · {calcPts(found)} pts actuales</div>
       <div className="guess-row">
         <input className="guess-inp" placeholder="Apellido del jugador..." value={guess}
           onChange={e => setGuess(e.target.value)} onKeyDown={e => e.key === "Enter" && handleGuess()} />
@@ -768,7 +768,7 @@ function AdivinaJugador({ onFinish, done, scores, jugador: JUGADOR }) {
   if (showOverlay) return (
     <FinishOverlay icon="⚽" juego="Adivina el Jugador" pts={finalPts} scores={scores}
       ptsBreakdown={
-        <div style={{ fontSize: 13, color: "#7a9abf" }}>
+        <div style={{ fontSize: 13, color: "#9a9a9a" }}>
           {won ? `¡Adivinado en pista ${pistasShown}! · ${finalPts} pts` : `No adivinado · 0 pts`}
         </div>
       }
@@ -801,7 +801,7 @@ function AdivinaJugador({ onFinish, done, scores, jugador: JUGADOR }) {
       {JUGADOR.foto_url && (
         <div style={{ textAlign: "center", marginBottom: 16 }}>
           <img src={JUGADOR.foto_url} alt={JUGADOR.nombre}
-            style={{ width: 140, height: 140, objectFit: "cover", borderRadius: "50%", border: "3px solid #4a9eff", boxShadow: "0 0 20px #4a9eff44" }} />
+            style={{ width: 140, height: 140, objectFit: "cover", borderRadius: "50%", border: "3px solid #ffb400", boxShadow: "0 0 20px #ffb40044" }} />
         </div>
       )}
       <div className="result-pts-big">{finalPts}</div>
@@ -812,8 +812,8 @@ function AdivinaJugador({ onFinish, done, scores, jugador: JUGADOR }) {
       </div>
       <div className="rank-summary">
         <div className="rank-summary-title">Acumulado ranking de hoy</div>
-        <div className="rank-summary-row"><span style={{ color: "#7a9abf" }}>⚽ Jugador</span><span style={{ color: "#4a9eff", fontFamily: "'Bebas Neue',sans-serif", fontSize: 16 }}>{finalPts} pts</span></div>
-        <div className="rank-summary-row"><span style={{ color: "#7a9abf" }}>Total acumulado hoy</span><span style={{ color: "#f5c518", fontFamily: "'Bebas Neue',sans-serif", fontSize: 16 }}>{Object.values(scores).reduce((a,b)=>a+b,0) + finalPts} pts</span></div>
+        <div className="rank-summary-row"><span style={{ color: "#9a9a9a" }}>⚽ Jugador</span><span style={{ color: "#ffb400", fontFamily: "'Space Mono',monospace", fontSize: 16 }}>{finalPts} pts</span></div>
+        <div className="rank-summary-row"><span style={{ color: "#9a9a9a" }}>Total acumulado hoy</span><span style={{ color: "#ffd700", fontFamily: "'Space Mono',monospace", fontSize: 16 }}>{Object.values(scores).reduce((a,b)=>a+b,0) + finalPts} pts</span></div>
       </div>
     </div>
   );
@@ -826,7 +826,7 @@ function AdivinaJugador({ onFinish, done, scores, jugador: JUGADOR }) {
       <div className="sil-wrap">
         {JUGADOR.foto_url ? (
           <img src={JUGADOR.foto_url} alt="Jugador"
-            style={{ width: 120, height: 120, objectFit: "cover", borderRadius: "50%", filter: "brightness(0)", border: "3px solid #1a2a45" }} />
+            style={{ width: 120, height: 120, objectFit: "cover", borderRadius: "50%", filter: "brightness(0)", border: "3px solid #2a2a2a" }} />
         ) : (
           <div className="sil">🧍</div>
         )}
@@ -836,7 +836,7 @@ function AdivinaJugador({ onFinish, done, scores, jugador: JUGADOR }) {
         {[0,1,2,3,4].map(i => (
           <div key={i} className={`dot ${i < tries.length ? (tries[i]?.correct ? "won" : "used") : ""}`} />
         ))}
-        <span style={{ fontSize: 12, color: "#6b8f71", marginLeft: 6 }}>{tries.length}/5 intentos · {currentPts} pts si aciertas</span>
+        <span style={{ fontSize: 12, color: "#7a7a7a", marginLeft: 6 }}>{tries.length}/5 intentos · {currentPts} pts si aciertas</span>
       </div>
       <div className="pistas">
         {JUGADOR.pistas.slice(0, pistasShown).map((p, i) => (
@@ -911,7 +911,7 @@ function Combina({ onFinish, done, scores, combinas: COMBINAS }) {
     const ok = comb.validar(g);
     setHistory(h => [...h, { desc: comb.desc, respuesta: guess.trim(), ok }]);
     setGuess("");
-    addFloat(ok ? "+20" : "❌", ok ? "#a8ff3e" : "#e74c3c");
+    addFloat(ok ? "+20" : "❌", ok ? "#ffb400" : "#ff3b3b");
     if (ok) { setAciertos(a => a + 1); setCombIdx(i => i + 1); }
   };
 
@@ -920,7 +920,7 @@ function Combina({ onFinish, done, scores, combinas: COMBINAS }) {
     setHistory(h => [...h, { desc: comb.desc, respuesta: "SALTO", ok: false, salto: true }]);
     setSaltos(s => s + 1);
     setCombIdx(i => i + 1);
-    addFloat("-10", "#e74c3c");
+    addFloat("-10", "#ff3b3b");
   };
 
   const pct = (timeLeft / 60) * 100;
@@ -931,12 +931,12 @@ function Combina({ onFinish, done, scores, combinas: COMBINAS }) {
       ptsBreakdown={
         <div>
           <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, marginBottom: 4 }}>
-            <span style={{ color: "#7a9abf" }}>{aciertos} aciertos × 20</span>
+            <span style={{ color: "#9a9a9a" }}>{aciertos} aciertos × 20</span>
             <span style={{ color: "#e8f0ff" }}>+{Math.min(aciertos,20)*20} pts</span>
           </div>
           <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13 }}>
-            <span style={{ color: "#7a9abf" }}>{saltos} saltos × 10</span>
-            <span style={{ color: "#e74c3c" }}>-{saltos*10} pts</span>
+            <span style={{ color: "#9a9a9a" }}>{saltos} saltos × 10</span>
+            <span style={{ color: "#ff3b3b" }}>-{saltos*10} pts</span>
           </div>
         </div>
       }
@@ -975,18 +975,18 @@ function Combina({ onFinish, done, scores, combinas: COMBINAS }) {
       <div className="result-pts-big">{finalPts}</div>
       <div className="result-sub">{aciertos} aciertos · {saltos} saltos</div>
       <div className="result-grid3">
-        <div className="rs"><div className="rs-val" style={{ color: "#a8ff3e" }}>{aciertos}</div><div className="rs-lbl">Aciertos</div></div>
-        <div className="rs"><div className="rs-val" style={{ color: "#e74c3c" }}>{saltos}</div><div className="rs-lbl">Saltos</div></div>
+        <div className="rs"><div className="rs-val" style={{ color: "#ffb400" }}>{aciertos}</div><div className="rs-lbl">Aciertos</div></div>
+        <div className="rs"><div className="rs-val" style={{ color: "#ff3b3b" }}>{saltos}</div><div className="rs-lbl">Saltos</div></div>
         <div className="rs"><div className="rs-val">{aciertos + saltos}</div><div className="rs-lbl">Total retos</div></div>
       </div>
       <div className="rank-summary">
         <div className="rank-summary-title">Acumulado ranking de hoy</div>
-        <div className="rank-summary-row"><span style={{ color: "#9ab09e" }}>🔍 Combina</span><span style={{ color: "#a8ff3e", fontFamily: "'Bebas Neue',sans-serif", fontSize: 16 }}>{finalPts} pts</span></div>
-        <div className="rank-summary-row"><span style={{ color: "#9ab09e" }}>Total acumulado hoy</span><span style={{ color: "#f5c518", fontFamily: "'Bebas Neue',sans-serif", fontSize: 16 }}>{Object.values(scores).reduce((a,b)=>a+b,0) + finalPts} pts</span></div>
+        <div className="rank-summary-row"><span style={{ color: "#7a7a7a" }}>🔍 Combina</span><span style={{ color: "#ffb400", fontFamily: "'Space Mono',monospace", fontSize: 16 }}>{finalPts} pts</span></div>
+        <div className="rank-summary-row"><span style={{ color: "#7a7a7a" }}>Total acumulado hoy</span><span style={{ color: "#ffd700", fontFamily: "'Space Mono',monospace", fontSize: 16 }}>{Object.values(scores).reduce((a,b)=>a+b,0) + finalPts} pts</span></div>
       </div>
       {history.length > 0 && (
         <>
-          <div style={{ fontSize: 12, color: "#6b8f71", marginBottom: 8 }}>Historial:</div>
+          <div style={{ fontSize: 12, color: "#7a7a7a", marginBottom: 8 }}>Historial:</div>
           <div className="comb-history">
             {history.map((h, i) => (
               <div key={i} className={`ch-row ${h.ok ? "ch-ok" : "ch-ko"}`}>
@@ -1007,7 +1007,7 @@ function Combina({ onFinish, done, scores, combinas: COMBINAS }) {
       ))}
       <div className="score-row">
         <div className="score-live">⚡ {ptsActuales} pts</div>
-        <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 22, color: timeLeft <= 30 ? "#e74c3c" : "#f0ede6" }}>
+        <div style={{ fontFamily: "'Space Mono',monospace", fontSize: 22, color: timeLeft <= 30 ? "#ff3b3b" : "#f2f2f2" }}>
           {Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, "0")}
         </div>
       </div>
@@ -1015,8 +1015,8 @@ function Combina({ onFinish, done, scores, combinas: COMBINAS }) {
         <div className={`timer-bar${pct > 50 ? "" : pct > 25 ? " warn" : " danger"}`} style={{ width: `${pct}%` }} />
       </div>
       <div className="comb-pts-row">
-        <div className="comb-stat"><div className="comb-val" style={{ color: "#a8ff3e" }}>{aciertos}</div><div className="comb-lbl">Aciertos</div></div>
-        <div className="comb-stat"><div className="comb-val" style={{ color: "#e74c3c" }}>{saltos}</div><div className="comb-lbl">Saltos</div></div>
+        <div className="comb-stat"><div className="comb-val" style={{ color: "#ffb400" }}>{aciertos}</div><div className="comb-lbl">Aciertos</div></div>
+        <div className="comb-stat"><div className="comb-val" style={{ color: "#ff3b3b" }}>{saltos}</div><div className="comb-lbl">Saltos</div></div>
       </div>
       <div className="comb-reto">
         <div className="comb-reto-label">Encuentra un jugador que sea:</div>
@@ -1383,7 +1383,7 @@ export default function App() {
   if (checkingSession) return (
     <div style={{ background: "#0a0a0f", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
       <style>{css}</style>
-      <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 24, color: "#4a9eff", letterSpacing: 2 }}>CARGANDO...</div>
+      <div style={{ fontFamily: "'Space Mono',monospace", fontSize: 24, color: "#ffb400", letterSpacing: 2 }}>CARGANDO...</div>
     </div>
   );
 
@@ -1422,7 +1422,7 @@ export default function App() {
   if (loadingContent) return (
     <div style={{ background: "#0a0a0f", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
       <style>{css}</style>
-      <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 24, color: "#4a9eff", letterSpacing: 2 }}>CARGANDO CONTENIDO...</div>
+      <div style={{ fontFamily: "'Space Mono',monospace", fontSize: 24, color: "#ffb400", letterSpacing: 2 }}>CARGANDO CONTENIDO...</div>
     </div>
   );
 
@@ -1460,11 +1460,11 @@ export default function App() {
         {tab === "inicio" && (
           <>
             <div className="home-hero">
-              <div style={{ fontSize: 12, color: "#6b8f71", textTransform: "uppercase", letterSpacing: 2, marginBottom: 8 }}>Puntos de hoy</div>
+              <div style={{ fontSize: 12, color: "#7a7a7a", textTransform: "uppercase", letterSpacing: 2, marginBottom: 8 }}>Puntos de hoy</div>
               <div className="home-pts">{totalPts}</div>
               <div className="home-pts-lbl">¡Juega todos los modos para sumar más!</div>
             </div>
-            <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 14, color: "#6b8f71", letterSpacing: 2, marginBottom: 12 }}>MODOS DE HOY</div>
+            <div style={{ fontFamily: "'Space Mono',monospace", fontSize: 14, color: "#7a7a7a", letterSpacing: 2, marginBottom: 12 }}>MODOS DE HOY</div>
             <div className="mode-list">
               {modes.map(m => (
                 <div key={m.id} className="mode-item" onClick={() => setTab(m.id)}>
@@ -1474,7 +1474,7 @@ export default function App() {
                     <div className="mode-desc">{m.desc}</div>
                   </div>
                   {m.maxPts === null
-                    ? <div style={{ marginLeft: "auto", fontSize: 11, color: "#6b8f71" }}>PRONTO</div>
+                    ? <div style={{ marginLeft: "auto", fontSize: 11, color: "#7a7a7a" }}>PRONTO</div>
                     : done[m.id]
                       ? <div className="mode-done">✅</div>
                       : <div className="mode-pts">+{m.maxPts}</div>
