@@ -291,7 +291,7 @@ function SecAlineaciones({ data, setData }) {
   const [editing, setEditing] = useState(null);
   const [alert, setAlert] = useState(null);
   const emptyJug = { pos: "", nombre: "", alias: [] };
-  const emptyForm = { equipo: "", rival: "", competicion: "", temporada: "", formacion: "4-3-3", jugadores: Array(11).fill(null).map(() => ({ ...emptyJug, alias: [] })) };
+  const emptyForm = { equipo: "", rival: "", competicion: "", temporada: "", formacion: "4-3-3", jugadores: Array(11).fill(null).map(() => ({ ...emptyJug, alias: [] })), foto_url: "" };
   const [form, setForm] = useState(emptyForm);
 
   const showAlert = (msg, type = "ok") => { setAlert({ msg, type }); setTimeout(() => setAlert(null), 2500); };
@@ -309,6 +309,7 @@ function SecAlineaciones({ data, setData }) {
     const payload = {
       equipo: form.equipo, rival: form.rival, competicion: form.competicion,
       temporada: form.temporada, formacion: form.formacion, jugadores: form.jugadores,
+      foto_url: form.foto_url || null,
     };
     if (editing) {
       const { error } = await supabase.from("alineaciones").update(payload).eq("id", editing);
@@ -393,6 +394,12 @@ function SecAlineaciones({ data, setData }) {
                 {["4-3-3","4-4-2","4-2-3-1","3-5-2","5-3-2","4-1-4-1"].map(f => <option key={f} value={f}>{f}</option>)}
               </select>
             </div>
+            <div className="inp-group form-full">
+              <label className="lbl">URL de la foto del partido (opcional)</label>
+              <input className="inp" placeholder="https://... (enlace directo a imagen)" value={form.foto_url}
+                onChange={e => setForm(f => ({ ...f, foto_url: e.target.value }))} />
+              {form.foto_url && <img src={form.foto_url} alt="Preview" style={{ width: "100%", maxHeight: 160, objectFit: "cover", borderRadius: 8, marginTop: 8, border: "2px solid #1e3d25" }} />}
+            </div>
           </div>
           <hr className="divider" />
           <div className="lbl" style={{ marginBottom: 12 }}>11 JUGADORES — añade alias / formas alternativas aceptadas</div>
@@ -424,7 +431,7 @@ function SecJugadores({ data, setData }) {
   const [view, setView] = useState("lista");
   const [editing, setEditing] = useState(null);
   const [alert, setAlert] = useState(null);
-  const emptyForm = { nombre: "", alias: [], pistaGeneral: "", pistas: ["", "", "", "", ""] };
+  const emptyForm = { nombre: "", alias: [], pistaGeneral: "", pistas: ["", "", "", "", ""], foto_url: "" };
   const [form, setForm] = useState(emptyForm);
 
   const showAlert = (msg, type = "ok") => { setAlert({ msg, type }); setTimeout(() => setAlert(null), 2500); };
@@ -438,6 +445,7 @@ function SecJugadores({ data, setData }) {
     const payload = {
       nombre: form.nombre, alias: form.alias,
       pista_general: form.pistaGeneral, pistas: form.pistas,
+      foto_url: form.foto_url || null,
     };
     if (editing) {
       const { error } = await supabase.from("jugadores_adivina").update(payload).eq("id", editing);
@@ -509,7 +517,13 @@ function SecJugadores({ data, setData }) {
             <AliasEditor alias={form.alias} onChange={v => setForm(f => ({ ...f, alias: v }))} />
           </div>
           <div className="inp-group">
-            <label className="lbl">Pista general (siempre visible)</label>
+            <label className="lbl">URL de la foto del jugador (opcional)</label>
+            <input className="inp" placeholder="https://... (enlace directo a imagen)" value={form.foto_url}
+              onChange={e => setForm(f => ({ ...f, foto_url: e.target.value }))} />
+            {form.foto_url && <img src={form.foto_url} alt="Preview" style={{ width: 80, height: 80, objectFit: "cover", borderRadius: "50%", marginTop: 8, border: "2px solid #1e3d25" }} />}
+          </div>
+          <div className="inp-group">
+            <label className="lbl">Pista general</label>
             <input className="inp" placeholder="🌟 Delantero | Menos de 30 años" value={form.pistaGeneral} onChange={e => setForm(f => ({ ...f, pistaGeneral: e.target.value }))} />
           </div>
           <hr className="divider" />
@@ -698,11 +712,13 @@ export default function Admin() {
       setAlineaciones((al || []).map(a => ({
         id: a.id, equipo: a.equipo, rival: a.rival, competicion: a.competicion,
         temporada: a.temporada, formacion: a.formacion, jugadores: a.jugadores,
+        foto_url: a.foto_url || "",
       })));
 
       const { data: ju } = await supabase.from("jugadores_adivina").select("*").order("created_at");
       setJugadores((ju || []).map(j => ({
         id: j.id, nombre: j.nombre, alias: j.alias || [], pistaGeneral: j.pista_general, pistas: j.pistas,
+        foto_url: j.foto_url || "",
       })));
 
       const { data: co } = await supabase.from("combinas").select("*").order("created_at");
@@ -794,7 +810,6 @@ export default function Admin() {
               { id: "alineacion",icon: "🏟", name: "Adivina la Alineación", maxPts: 200 },
               { id: "jugador",   icon: "⚽", name: "Adivina el Jugador",    maxPts: 300 },
               { id: "combina",   icon: "🔍", name: "Combina",               maxPts: 400 },
-              { id: "gol",       icon: "📹", name: "Adivina el Gol",        maxPts: 300 },
             ].map(j => (
               <div key={j.id} className="card" style={{ display: "flex", alignItems: "center", gap: 16, padding: "18px 22px" }}>
                 <div style={{ fontSize: 32 }}>{j.icon}</div>
