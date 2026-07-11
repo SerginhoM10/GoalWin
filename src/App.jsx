@@ -420,7 +420,7 @@ function TestDiario({ onFinish, done, scores, preguntas }) {
     </div>
   );
 
-  if (done) return (
+  if (done && !showResult) return (
     <div className="card">
       <div className="card-title">✔ TEST DIARIO</div>
       <div className="alert alert-ok">✅ Ya completaste el test de hoy. ¡Vuelve mañana!</div>
@@ -610,7 +610,7 @@ function AdivinaAlineacion({ onFinish, done, scores, partido: ALINEACION }) {
   };
   const lineas = getLineas();
 
-  if (done) return (
+  if (done && !finished) return (
     <div className="card">
       <div className="card-title">🏟 ADIVINA LA ALINEACIÓN</div>
       <div className="alert alert-ok">✅ Ya jugaste la alineación de hoy. ¡Vuelve mañana!</div>
@@ -775,7 +775,7 @@ function AdivinaJugador({ onFinish, done, scores, jugador: JUGADOR }) {
     </div>
   );
 
-  if (done) return (
+  if (done && !finished) return (
     <div className="card">
       <div className="card-title">⚽ ADIVINA EL JUGADOR</div>
       <div className="alert alert-ok">✅ Ya jugaste el jugador de hoy. ¡Vuelve mañana!</div>
@@ -943,7 +943,7 @@ function Combina({ onFinish, done, scores, combinas: COMBINAS }) {
     </div>
   );
 
-  if (done) return (
+  if (done && !finished) return (
     <div className="card">
       <div className="card-title">🔍 COMBINA</div>
       <div className="alert alert-ok">✅ Ya jugaste el Combina de hoy. ¡Vuelve mañana!</div>
