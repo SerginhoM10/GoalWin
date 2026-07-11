@@ -687,11 +687,17 @@ function SecUsuarios() {
 
 // ─── ROOT ─────────────────────────────────────────────────────────────────────
 export default function Admin() {
-  const [loggedIn, setLoggedIn] = useState(false);
+  const [checkingSession, setCheckingSession] = useState(true);
+  const [session, setSession] = useState(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [checkingAdmin, setCheckingAdmin] = useState(false);
+
+  const [email, setEmail] = useState("");
   const [pw, setPw] = useState("");
-  const [pwErr, setPwErr] = useState(false);
+  const [loginErr, setLoginErr] = useState("");
+
   const [sec, setSec] = useState("activar");
-  const [juegosActivos, setJuegosActivos] = useState({ test: false, alineacion: false, jugador: false, combina: false, gol: false });
+  const [juegosActivos, setJuegosActivos] = useState({ test: false, alineacion: false, jugador: false, combina: false });
   const [loadingData, setLoadingData] = useState(true);
 
   const [preguntas, setPreguntas] = useState([]);
@@ -699,9 +705,35 @@ export default function Admin() {
   const [jugadores, setJugadores] = useState([]);
   const [combinas, setCombinas] = useState([]);
 
-  // Carga todos los datos desde Supabase cuando el admin inicia sesión
+  // Comprueba si ya hay sesión activa (por ejemplo, al refrescar la página)
   useEffect(() => {
-    if (!loggedIn) return;
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setCheckingSession(false);
+    });
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+    return () => listener.subscription.unsubscribe();
+  }, []);
+
+  // Comprueba, contra la base de datos (no en el navegador), si este usuario
+  // que ha iniciado sesión está en la tabla "admins". Esto es lo que impide que
+  // cualquiera con una cuenta normal de Goal Win pueda entrar al panel.
+  useEffect(() => {
+    const checkAdmin = async () => {
+      if (!session?.user) { setIsAdmin(false); return; }
+      setCheckingAdmin(true);
+      const { data } = await supabase.from("admins").select("user_id").eq("user_id", session.user.id).maybeSingle();
+      setIsAdmin(!!data);
+      setCheckingAdmin(false);
+    };
+    checkAdmin();
+  }, [session]);
+
+  // Carga todos los datos desde Supabase cuando se confirma que es admin
+  useEffect(() => {
+    if (!isAdmin) return;
     const loadAll = async () => {
       setLoadingData(true);
 
@@ -734,7 +766,7 @@ export default function Admin() {
       setLoadingData(false);
     };
     loadAll();
-  }, [loggedIn]);
+  }, [isAdmin]);
 
   const toggleJuego = async (id) => {
     const nuevoEstado = !juegosActivos[id];
@@ -742,23 +774,59 @@ export default function Admin() {
     if (!error) setJuegosActivos(a => ({ ...a, [id]: nuevoEstado }));
   };
 
-  const handleLogin = () => {
-    if (pw === "Scrumfit2026!") { setLoggedIn(true); setPwErr(false); }
-    else setPwErr(true);
+  const handleLogin = async () => {
+    setLoginErr("");
+    const { error } = await supabase.auth.signInWithPassword({ email, password: pw });
+    if (error) setLoginErr("Email o contraseña incorrectos.");
   };
 
-  if (!loggedIn) return (
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setSession(null);
+    setIsAdmin(false);
+  };
+
+  // ── Pantallas de carga / login / sin permiso ──────────────────────────────
+  if (checkingSession) return (
+    <div style={{ background: "#0a0a0f", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <style>{css}</style>
+      <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 22, color: "#a8ff3e", letterSpacing: 2 }}>CARGANDO...</div>
+    </div>
+  );
+
+  if (!session) return (
     <div style={{ background: "#0a0a0f", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
       <style>{css}</style>
       <div style={{ width: "100%", maxWidth: 340, background: "#111d14", border: "1px solid #1e3d25", borderRadius: 14, padding: 32 }}>
         <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 28, color: "#a8ff3e", letterSpacing: 2, marginBottom: 4 }}>PANEL ADMIN</div>
         <div style={{ fontSize: 12, color: "#6b8f71", marginBottom: 24 }}>Goal Win · Acceso restringido</div>
-        {pwErr && <div className="alert alert-ko">Contraseña incorrecta.</div>}
-        <label className="lbl">Contraseña de administrador</label>
+        {loginErr && <div className="alert alert-ko">{loginErr}</div>}
+        <label className="lbl">Email</label>
+        <input className="inp" type="email" placeholder="admin@goalwin.pro" value={email}
+          onChange={e => setEmail(e.target.value)} style={{ marginBottom: 14 }} />
+        <label className="lbl">Contraseña</label>
         <input className="inp" type="password" placeholder="••••••••" value={pw}
           onChange={e => setPw(e.target.value)} onKeyDown={e => e.key === "Enter" && handleLogin()}
           style={{ marginBottom: 14 }} />
         <button className="btn-add" style={{ width: "100%" }} onClick={handleLogin}>ENTRAR</button>
+      </div>
+    </div>
+  );
+
+  if (checkingAdmin) return (
+    <div style={{ background: "#0a0a0f", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <style>{css}</style>
+      <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 22, color: "#a8ff3e", letterSpacing: 2 }}>COMPROBANDO PERMISOS...</div>
+    </div>
+  );
+
+  if (!isAdmin) return (
+    <div style={{ background: "#0a0a0f", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+      <style>{css}</style>
+      <div style={{ width: "100%", maxWidth: 340, background: "#111d14", border: "1px solid #1e3d25", borderRadius: 14, padding: 32, textAlign: "center" }}>
+        <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 24, color: "#e74c3c", letterSpacing: 1, marginBottom: 10 }}>SIN PERMISO</div>
+        <div style={{ fontSize: 13, color: "#6b8f71", marginBottom: 20 }}>Esta cuenta ha iniciado sesión correctamente, pero no tiene permisos de administrador.</div>
+        <button className="btn-ghost" style={{ width: "100%" }} onClick={handleLogout}>Cerrar sesión</button>
       </div>
     </div>
   );
@@ -797,7 +865,7 @@ export default function Admin() {
           <div className="sb-stat">Total partidos <span>{alineaciones.length}</span></div>
           <div className="sb-stat">Total jugadores <span>{jugadores.length}</span></div>
           <div className="sb-stat">Total combinas <span>{combinas.length}</span></div>
-          <button className="btn-ghost" style={{ width: "100%", marginTop: 10, fontSize: 12 }} onClick={() => setLoggedIn(false)}>Cerrar sesión</button>
+          <button className="btn-ghost" style={{ width: "100%", marginTop: 10, fontSize: 12 }} onClick={handleLogout}>Cerrar sesión</button>
         </div>
       </aside>
       <main className="content">
