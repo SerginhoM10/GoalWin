@@ -1271,16 +1271,13 @@ export default function App() {
 
   // Carga el progreso de HOY del usuario (qué juegos completó y con cuántos puntos).
   // Esto es lo que hace que "ya jugaste hoy" sobreviva a un refresco de página.
+  // Usa una función de Supabase (progreso_diario_hoy) que calcula "hoy" con el
+  // reloj del SERVIDOR, no con el del dispositivo, para que no se pueda hacer
+  // trampa adelantando la fecha del móvil/ordenador.
   useEffect(() => {
     const loadProgresoHoy = async () => {
       if (!user?.id) return;
-      const todayStr = getTodayDateStr();
-      const { data } = await supabase
-        .from("progreso_diario")
-        .select("*")
-        .eq("user_id", user.id)
-        .eq("fecha", todayStr)
-        .maybeSingle();
+      const { data } = await supabase.rpc("progreso_diario_hoy").maybeSingle();
 
       if (data) {
         setScores({
@@ -1323,16 +1320,14 @@ export default function App() {
         }).eq("id", session.user.id);
       }
 
-      // Guarda el progreso de HOY (con fecha) para que sobreviva a un refresco de página
-      // y no se pueda repetir un juego ya completado hoy.
-      await supabase.from("progreso_diario").upsert({
-        user_id: session.user.id,
-        fecha: getTodayDateStr(),
-        test_pts: newDone.test ? newScores.test : null,
-        alineacion_pts: newDone.alineacion ? newScores.alineacion : null,
-        jugador_pts: newDone.jugador ? newScores.jugador : null,
-        combina_pts: newDone.combina ? newScores.combina : null,
-      }, { onConflict: "user_id,fecha" });
+      // Guarda el progreso de HOY llamando a la función de Supabase, que calcula
+      // la fecha en el servidor (no confía en la fecha que mande el navegador).
+      await supabase.rpc("guardar_progreso_diario", {
+        p_test: newDone.test ? newScores.test : null,
+        p_alineacion: newDone.alineacion ? newScores.alineacion : null,
+        p_jugador: newDone.jugador ? newScores.jugador : null,
+        p_combina: newDone.combina ? newScores.combina : null,
+      });
     }
   };
 
