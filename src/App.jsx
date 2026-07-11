@@ -26,6 +26,13 @@ function getTodaySeed() {
   return hoy.getFullYear() * 10000 + (hoy.getMonth() + 1) * 100 + hoy.getDate();
 }
 
+// Fecha de hoy en formato YYYY-MM-DD (según el reloj del dispositivo del usuario)
+// Se usa para guardar y consultar el progreso diario en Supabase
+function getTodayDateStr() {
+  const hoy = new Date();
+  return `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, "0")}-${String(hoy.getDate()).padStart(2, "0")}`;
+}
+
 function shuffleWithSeed(arr, seed) {
   const rand = seedRandom(seed);
   const a = [...arr];
@@ -1239,6 +1246,7 @@ export default function App() {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
         setUser({
+          id: session.user.id,
           email: session.user.email,
           nombre: session.user.user_metadata?.nombre || session.user.email.split("@")[0],
         });
@@ -1249,6 +1257,7 @@ export default function App() {
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
         setUser({
+          id: session.user.id,
           email: session.user.email,
           nombre: session.user.user_metadata?.nombre || session.user.email.split("@")[0],
         });
@@ -1260,10 +1269,46 @@ export default function App() {
     return () => listener.subscription.unsubscribe();
   }, []);
 
+  // Carga el progreso de HOY del usuario (qué juegos completó y con cuántos puntos).
+  // Esto es lo que hace que "ya jugaste hoy" sobreviva a un refresco de página.
+  useEffect(() => {
+    const loadProgresoHoy = async () => {
+      if (!user?.id) return;
+      const todayStr = getTodayDateStr();
+      const { data } = await supabase
+        .from("progreso_diario")
+        .select("*")
+        .eq("user_id", user.id)
+        .eq("fecha", todayStr)
+        .maybeSingle();
+
+      if (data) {
+        setScores({
+          test: data.test_pts ?? 0,
+          alineacion: data.alineacion_pts ?? 0,
+          jugador: data.jugador_pts ?? 0,
+          combina: data.combina_pts ?? 0,
+        });
+        setDone({
+          test: data.test_pts !== null,
+          alineacion: data.alineacion_pts !== null,
+          jugador: data.jugador_pts !== null,
+          combina: data.combina_pts !== null,
+        });
+      } else {
+        // No hay fila para hoy todavía: es un día nuevo, nada jugado aún
+        setScores({ test: 0, alineacion: 0, jugador: 0, combina: 0 });
+        setDone({ test: false, alineacion: false, jugador: false, combina: false });
+      }
+    };
+    loadProgresoHoy();
+  }, [user]);
+
   const handleFinish = async (game, pts) => {
     const newScores = { ...scores, [game]: pts };
+    const newDone = { ...done, [game]: true };
     setScores(newScores);
-    setDone(d => ({ ...d, [game]: true }));
+    setDone(newDone);
 
     const newTotal = Object.values(newScores).reduce((a, b) => a + b, 0);
 
@@ -1277,6 +1322,17 @@ export default function App() {
           puntos_semana: (perfil.puntos_semana || 0) + pts,
         }).eq("id", session.user.id);
       }
+
+      // Guarda el progreso de HOY (con fecha) para que sobreviva a un refresco de página
+      // y no se pueda repetir un juego ya completado hoy.
+      await supabase.from("progreso_diario").upsert({
+        user_id: session.user.id,
+        fecha: getTodayDateStr(),
+        test_pts: newDone.test ? newScores.test : null,
+        alineacion_pts: newDone.alineacion ? newScores.alineacion : null,
+        jugador_pts: newDone.jugador ? newScores.jugador : null,
+        combina_pts: newDone.combina ? newScores.combina : null,
+      }, { onConflict: "user_id,fecha" });
     }
   };
 
