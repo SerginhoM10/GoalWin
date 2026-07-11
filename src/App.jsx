@@ -1393,7 +1393,7 @@ export default function App() {
       <div className="login-wrap">
         <div className="login-box">
           <div className="login-logo">GOAL <em>WIN</em></div>
-          <div className="login-tag">Goal Win: el juego diario de fútbol para poner a prueba tu conocimiento del deporte rey. Sé constante cada día para conseguir premios exclusivos cada semana. Adivina y conoce más sobre el fútbol, acierta, falla y sigue intentándolo.</div>
+          <div className="login-tag">Goal Win: el juego diario de fútbol para poner a prueba tu conocimiento del deporte rey. Sé constante cada día para conseguir premios exclusivos cada semana.</div>
           {authErr && <div className="alert alert-ko">{authErr}</div>}
           {authMsg && <div className="alert alert-ok">{authMsg}</div>}
           {authMode === "register" && (
