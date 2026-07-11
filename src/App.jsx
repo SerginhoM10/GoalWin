@@ -5,7 +5,9 @@ import { supabase } from "./supabaseClient";
 function timeBonus(totalSeconds) {
   if (totalSeconds <= 7) return 500;
   if (totalSeconds >= 31) return 0;
-  return 500 - (totalSeconds - 7) * 25;
+  // Math.max evita que el resultado se vuelva negativo entre el segundo 28 y el 30,
+  // que es lo que hacía que el bonus "no se aplicara" bien (restaba puntos en vez de sumar 0).
+  return Math.max(0, 500 - (totalSeconds - 7) * 25);
 }
 
 // ─── SEMILLA DIARIA ─────────────────────────────────────────────────────────
@@ -365,20 +367,24 @@ function TestDiario({ onFinish, done, scores, preguntas }) {
   const [baseScore, setBaseScore] = useState(0);
   const [answers, setAnswers] = useState([]);
   const [racha, setRacha] = useState(0);
-  const [startTime, setStartTime] = useState(null);
-  const [testStartTime, setTestStartTime] = useState(null);
   const [showResult, setShowResult] = useState(false);
   const [finalPts, setFinalPts] = useState(0);
   const [showOverlay, setShowOverlay] = useState(false);
   const questions = useRef(preguntas);
+  const testStartRef = useRef(null); // Ref para evitar problema de closure con el tiempo
 
   const q = questions.current[idx];
 
-  const finishTest = (answersArr, base, started) => {
+  const finishTest = (answersArr, base) => {
     const allCorrect = answersArr.length === 10 && answersArr.every(a => a.correct);
-    const totalSeconds = Math.round((Date.now() - started) / 1000);
+    const totalSeconds = testStartRef.current
+      ? Math.round((Date.now() - testStartRef.current) / 1000)
+      : 99;
+    // Según el PDF: <= 7s = 500 pts, cada segundo extra resta 25, >= 31s = 0 pts
+    // Solo se aplica si has acertado las 10
     const bonus = allCorrect ? timeBonus(totalSeconds) : 0;
     const total = base + bonus;
+    console.log("Test acabado:", { totalSeconds, base, bonus, total, allCorrect });
     setFinalPts(total);
     setShowOverlay(true);
   };
@@ -395,7 +401,7 @@ function TestDiario({ onFinish, done, scores, preguntas }) {
     setAnswers(newAnswers);
     setTimeout(() => {
       if (idx + 1 >= questions.current.length) {
-        finishTest(newAnswers, newBase, testStartTime);
+        finishTest(newAnswers, newBase);
       } else {
         setIdx(i2 => i2 + 1);
         setSel(null);
@@ -404,11 +410,8 @@ function TestDiario({ onFinish, done, scores, preguntas }) {
   };
 
   const handleRendirse = () => {
-    finishTest(answers, baseScore, testStartTime);
+    finishTest(answers, baseScore);
   };
-
-  const totalSeconds = testStartTime ? Math.round((Date.now() - testStartTime) / 1000) : 0;
-  const bonus = timeBonus(totalSeconds);
 
   if (!preguntas || preguntas.length < 10) return (
     <div className="card">
@@ -432,7 +435,7 @@ function TestDiario({ onFinish, done, scores, preguntas }) {
 
   if (phase === "countdown") return (
     <div className="card" style={{ textAlign: "center" }}>
-      <Countdown onDone={() => { setPhase("playing"); setTestStartTime(Date.now()); setStartTime(Date.now()); }} />
+      <Countdown onDone={() => { setPhase("playing"); testStartRef.current = Date.now(); }} />
     </div>
   );
 
@@ -588,12 +591,24 @@ function AdivinaAlineacion({ onFinish, done, scores, partido: ALINEACION }) {
 
   const pct = (timeLeft / 120) * 100;
   const barCls = pct > 50 ? "" : pct > 25 ? " warn" : " danger";
-  const lineas = [
-    [ALINEACION.jugadores[0]],
-    ALINEACION.jugadores.slice(1, 5),
-    ALINEACION.jugadores.slice(5, 8),
-    ALINEACION.jugadores.slice(8, 11),
-  ];
+
+  // Genera las líneas del campo según la formación
+  // .filter(Boolean) evita que la app se rompa si algún jugador falta en los datos
+  // (por ejemplo, un partido antiguo guardado con menos de 11 jugadores)
+  const getLineas = () => {
+    const j = ALINEACION.jugadores || [];
+    const f = ALINEACION.formacion;
+    let raw;
+    if (f === "4-3-3") raw = [[j[0]], j.slice(1,5), j.slice(5,8), j.slice(8,11)];
+    else if (f === "4-4-2") raw = [[j[0]], j.slice(1,5), j.slice(5,9), j.slice(9,11)];
+    else if (f === "4-2-3-1") raw = [[j[0]], j.slice(1,5), j.slice(5,7), j.slice(7,10), [j[10]]];
+    else if (f === "3-5-2") raw = [[j[0]], j.slice(1,4), j.slice(4,9), j.slice(9,11)];
+    else if (f === "5-3-2") raw = [[j[0]], j.slice(1,6), j.slice(6,9), j.slice(9,11)];
+    else if (f === "4-1-4-1") raw = [[j[0]], j.slice(1,5), [j[5]], j.slice(6,10), [j[10]]];
+    else raw = [[j[0]], j.slice(1,5), j.slice(5,8), j.slice(8,11)]; // Fallback genérico
+    return raw.map(linea => linea.filter(Boolean));
+  };
+  const lineas = getLineas();
 
   if (done) return (
     <div className="card">
@@ -667,6 +682,11 @@ function AdivinaAlineacion({ onFinish, done, scores, partido: ALINEACION }) {
       <div className="timer-txt">{Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, "0")}</div>
       <div className="timer-bar-wrap"><div className={`timer-bar${barCls}`} style={{ width: `${pct}%` }} /></div>
       {msg && <div className={`alert alert-${msg.type === "ok" ? "ok" : "ko"}`}>{msg.text}</div>}
+      {ALINEACION.foto_url && (
+        <div style={{ marginBottom: 12, borderRadius: 10, overflow: "hidden", border: "1px solid #1a2a45" }}>
+          <img src={ALINEACION.foto_url} alt="Foto del partido" style={{ width: "100%", objectFit: "cover", maxHeight: 160 }} />
+        </div>
+      )}
       <div className="campo">
         {lineas.map((linea, li) => (
           <div key={li} className="campo-row">
@@ -771,6 +791,12 @@ function AdivinaJugador({ onFinish, done, scores, jugador: JUGADOR }) {
   if (finished) return (
     <div className="card">
       <div className="card-title">⚽ RESULTADO</div>
+      {JUGADOR.foto_url && (
+        <div style={{ textAlign: "center", marginBottom: 16 }}>
+          <img src={JUGADOR.foto_url} alt={JUGADOR.nombre}
+            style={{ width: 140, height: 140, objectFit: "cover", borderRadius: "50%", border: "3px solid #4a9eff", boxShadow: "0 0 20px #4a9eff44" }} />
+        </div>
+      )}
       <div className="result-pts-big">{finalPts}</div>
       <div className="result-sub">{won ? `¡Era ${JUGADOR.nombre}! 🎉` : `Era ${JUGADOR.nombre}. ¡Suerte la próxima!`}</div>
       <div className="result-grid3" style={{ gridTemplateColumns: "1fr 1fr" }}>
@@ -779,8 +805,8 @@ function AdivinaJugador({ onFinish, done, scores, jugador: JUGADOR }) {
       </div>
       <div className="rank-summary">
         <div className="rank-summary-title">Acumulado ranking de hoy</div>
-        <div className="rank-summary-row"><span style={{ color: "#9ab09e" }}>⚽ Jugador</span><span style={{ color: "#a8ff3e", fontFamily: "'Bebas Neue',sans-serif", fontSize: 16 }}>{finalPts} pts</span></div>
-        <div className="rank-summary-row"><span style={{ color: "#9ab09e" }}>Total acumulado hoy</span><span style={{ color: "#f5c518", fontFamily: "'Bebas Neue',sans-serif", fontSize: 16 }}>{Object.values(scores).reduce((a,b)=>a+b,0) + finalPts} pts</span></div>
+        <div className="rank-summary-row"><span style={{ color: "#7a9abf" }}>⚽ Jugador</span><span style={{ color: "#4a9eff", fontFamily: "'Bebas Neue',sans-serif", fontSize: 16 }}>{finalPts} pts</span></div>
+        <div className="rank-summary-row"><span style={{ color: "#7a9abf" }}>Total acumulado hoy</span><span style={{ color: "#f5c518", fontFamily: "'Bebas Neue',sans-serif", fontSize: 16 }}>{Object.values(scores).reduce((a,b)=>a+b,0) + finalPts} pts</span></div>
       </div>
     </div>
   );
@@ -790,7 +816,14 @@ function AdivinaJugador({ onFinish, done, scores, jugador: JUGADOR }) {
   return (
     <div className="card">
       <div className="card-title">⚽ ADIVINA EL JUGADOR</div>
-      <div className="sil-wrap"><div className="sil">🧍</div></div>
+      <div className="sil-wrap">
+        {JUGADOR.foto_url ? (
+          <img src={JUGADOR.foto_url} alt="Jugador"
+            style={{ width: 120, height: 120, objectFit: "cover", borderRadius: "50%", filter: "brightness(0)", border: "3px solid #1a2a45" }} />
+        ) : (
+          <div className="sil">🧍</div>
+        )}
+      </div>
       <div className="pista-gen">🌟 {JUGADOR.pistaGeneral}</div>
       <div className="tries-dots">
         {[0,1,2,3,4].map(i => (
@@ -823,7 +856,7 @@ function AdivinaJugador({ onFinish, done, scores, jugador: JUGADOR }) {
 // ─── JUEGO 4: COMBINA ────────────────────────────────────────────────────────
 function Combina({ onFinish, done, scores, combinas: COMBINAS }) {
   const [phase, setPhase] = useState("intro");
-  const [timeLeft, setTimeLeft] = useState(120);
+  const [timeLeft, setTimeLeft] = useState(60);
   const [combIdx, setCombIdx] = useState(0);
   const [guess, setGuess] = useState("");
   const [aciertos, setAciertos] = useState(0);
@@ -883,7 +916,7 @@ function Combina({ onFinish, done, scores, combinas: COMBINAS }) {
     addFloat("-10", "#e74c3c");
   };
 
-  const pct = (timeLeft / 120) * 100;
+  const pct = (timeLeft / 60) * 100;
   const ptsActuales = Math.max(0, Math.min(aciertos, 20) * 20 - saltos * 10);
 
   if (showOverlay) return (
@@ -919,7 +952,7 @@ function Combina({ onFinish, done, scores, combinas: COMBINAS }) {
 
   if (phase === "intro") return (
     <IntroModal icon="🔍" title="COMBINA"
-      text="¡Tienes 2 minutos para combinar el máximo de jugadores posibles y llevarte 400 puntos! Cada acierto suma +20, cada salto resta -10."
+      text="¡Tienes 1 minuto para combinar el máximo de jugadores posibles y llevarte 400 puntos! Cada acierto suma +20, cada salto resta -10."
       onStart={() => setPhase("countdown")} />
   );
 
@@ -1005,21 +1038,6 @@ function Combina({ onFinish, done, scores, combinas: COMBINAS }) {
   );
 }
 
-// ─── JUEGO 5: GOL (PRÓXIMAMENTE) ─────────────────────────────────────────────
-function AdivinaGol() {
-  return (
-    <div className="card">
-      <div className="prox-wrap">
-        <div className="prox-icon">📹</div>
-        <div className="prox-title">ADIVINA EL GOL</div>
-        <div className="prox-text">
-          Estamos trabajando en ello.<br />Muy pronto podrás ver un gol y adivinar<br />el jugador, el equipo y el rival. ¡No te lo pierdas!
-        </div>
-      </div>
-    </div>
-  );
-}
-
 // ─── RANKING ──────────────────────────────────────────────────────────────────
 function Ranking({ user, scores }) {
   const [tab, setTab] = useState("diario");
@@ -1052,7 +1070,7 @@ function Ranking({ user, scores }) {
     pts: tab === "diario" ? u.puntos_totales : u.puntos_semana,
     me: u.nombre === user.nombre,
     desglose: tab === "diario"
-      ? { test: scores.test || 0, alineacion: scores.alineacion || 0, jugador: scores.jugador || 0, combina: scores.combina || 0, gol: 0 }
+      ? { test: scores.test || 0, alineacion: scores.alineacion || 0, jugador: scores.jugador || 0, combina: scores.combina || 0 }
       : null,
   }));
 
@@ -1095,7 +1113,6 @@ function Ranking({ user, scores }) {
                 <div className="des-row"><span className="des-lbl">🏟 Alineación</span><span className="des-val">{r.desglose?.alineacion || 0} pts</span></div>
                 <div className="des-row"><span className="des-lbl">⚽ Jugador</span><span className="des-val">{r.desglose?.jugador || 0} pts</span></div>
                 <div className="des-row"><span className="des-lbl">🔍 Combina</span><span className="des-val">{r.desglose?.combina || 0} pts</span></div>
-                <div className="des-row"><span className="des-lbl">📹 Gol</span><span className="des-val">{r.desglose?.gol || 0} pts</span></div>
               </div>
             )}
           </div>
@@ -1119,7 +1136,7 @@ export default function App() {
   const [done, setDone] = useState({ test: false, alineacion: false, jugador: false, combina: false });
 
   // Contenido cargado desde Supabase
-  const [juegosActivos, setJuegosActivos] = useState({ test: false, alineacion: false, jugador: false, combina: false, gol: false });
+  const [juegosActivos, setJuegosActivos] = useState({ test: false, alineacion: false, jugador: false, combina: false });
   const [preguntasHoy, setPreguntasHoy] = useState([]);
   const [partidoHoy, setPartidoHoy] = useState(null);
   const [jugadorHoy, setJugadorHoy] = useState(null);
@@ -1185,6 +1202,7 @@ export default function App() {
         setPartidoHoy({
           equipo: elegida.equipo, rival: elegida.rival, competicion: elegida.competicion,
           temporada: elegida.temporada, formacion: elegida.formacion, jugadores: elegida.jugadores,
+          foto_url: elegida.foto_url || null,
         });
       }
 
@@ -1197,6 +1215,7 @@ export default function App() {
         setJugadorHoy({
           nombre: elegido.nombre, alias: elegido.alias || [],
           pistaGeneral: elegido.pista_general, pistas: elegido.pistas,
+          foto_url: elegido.foto_url || null,
         });
       }
 
@@ -1355,8 +1374,7 @@ export default function App() {
     { id: "test",      icon: "✔",  name: "TEST DIARIO",            desc: "10 preguntas · Nivel progresivo · Bonus tiempo", maxPts: 600 },
     { id: "alineacion",icon: "🏟", name: "ADIVINA LA ALINEACIÓN",  desc: "2 minutos para los 11 jugadores",                maxPts: 200 },
     { id: "jugador",   icon: "⚽", name: "ADIVINA EL JUGADOR",     desc: "5 pistas progresivas · Sin tiempo",              maxPts: 300 },
-    { id: "combina",   icon: "🔍", name: "COMBINA",                desc: "2 minutos · Máximas combinaciones",              maxPts: 400 },
-    { id: "gol",       icon: "📹", name: "ADIVINA EL GOL",         desc: "Próximamente...",                                maxPts: null },
+    { id: "combina",   icon: "🔍", name: "COMBINA",                desc: "1 minuto · Máximas combinaciones",              maxPts: 400 },
   ];
 
   return (
@@ -1377,7 +1395,6 @@ export default function App() {
           ["alineacion","🏟 ALINEACIÓN"],
           ["jugador",   "⚽ JUGADOR"],
           ["combina",   "🔍 COMBINA"],
-          ["gol",       "📹 GOL"],
           ["ranking",   "🏆 RANKING"],
         ].map(([id, label]) => (
           <button key={id} className={`nav-btn ${tab === id ? "on" : ""}`} onClick={() => setTab(id)}>{label}</button>
@@ -1415,7 +1432,6 @@ export default function App() {
         {tab === "alineacion" && (juegosActivos.alineacion  ? <AdivinaAlineacion done={done.alineacion} scores={scores} partido={partidoHoy} onFinish={(pts) => handleFinish("alineacion", pts)} /> : <Proximamente icon="🏟" nombre="ADIVINA LA ALINEACIÓN" />)}
         {tab === "jugador"    && (juegosActivos.jugador      ? <AdivinaJugador    done={done.jugador}    scores={scores} jugador={jugadorHoy} onFinish={(pts) => handleFinish("jugador", pts)} />    : <Proximamente icon="⚽" nombre="ADIVINA EL JUGADOR" />)}
         {tab === "combina"    && (juegosActivos.combina      ? <Combina           done={done.combina}    scores={scores} combinas={combinasHoy} onFinish={(pts) => handleFinish("combina", pts)} />    : <Proximamente icon="🔍" nombre="COMBINA" />)}
-        {tab === "gol"        && <AdivinaGol />}
         {tab === "ranking"    && <Ranking user={user} scores={scores} />}
       </main>
     </div>
