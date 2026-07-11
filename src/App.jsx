@@ -45,18 +45,18 @@ function shuffleWithSeed(arr, seed) {
 
 // ─── STYLES ───────────────────────────────────────────────────────────────────
 const css = `
-@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Teko:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap');
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 body { background: #000000; color: #f2f2f2; font-family: 'Inter', sans-serif; min-height: 100vh; }
 .app { min-height: 100vh; display: flex; flex-direction: column; }
 
 /* HEADER */
 .hdr { background: #000000; border-bottom: 1px solid #2a2a2a; padding: 0 20px; height: 56px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 200; }
-.hdr-logo { font-family: 'Space Mono', monospace; font-weight: 700; font-size: 22px; letter-spacing: 1px; color: #ffb400; }
+.hdr-logo { font-family: 'Teko', sans-serif; font-weight: 700; font-size: 28px; letter-spacing: 1px; color: #ffb400; }
 .hdr-logo span { color: #f2f2f2; }
 .hdr-right { display: flex; align-items: center; gap: 10px; }
 .hdr-user { font-size: 13px; color: #7a7a7a; }
-.hdr-pts { font-family: 'Space Mono', monospace; font-weight: 700; font-size: 17px; color: #ffb400; }
+.hdr-pts { font-family: 'Teko', sans-serif; font-weight: 700; font-size: 17px; color: #ffb400; }
 .btn-out { background: none; border: 1px solid #2a2a2a; color: #7a7a7a; border-radius: 4px; padding: 3px 10px; font-size: 12px; cursor: pointer; }
 .btn-out:hover { color: #f2f2f2; }
 
@@ -73,42 +73,42 @@ body { background: #000000; color: #f2f2f2; font-family: 'Inter', sans-serif; mi
 /* LOGIN */
 .login-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #000000; padding: 20px; }
 .login-box { width: 100%; max-width: 380px; }
-.login-logo { font-family: 'Space Mono', monospace; font-weight: 700; font-size: 42px; letter-spacing: 2px; color: #ffb400; text-align: center; line-height: 1; }
+.login-logo { font-family: 'Teko', sans-serif; font-weight: 700; font-size: 54px; letter-spacing: 2px; color: #ffb400; text-align: center; line-height: 1; }
 .login-logo em { color: #f2f2f2; font-style: normal; }
 .login-tag { text-align: center; color: #9a9a9a; font-size: 16px; line-height: 1.6; margin: 14px 0 32px; }
 .inp-lbl { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #7a7a7a; margin-bottom: 6px; display: block; }
 .inp { width: 100%; background: #0a0a0a; border: 1px solid #2a2a2a; border-radius: 6px; padding: 11px 14px; color: #f2f2f2; font-size: 14px; font-family: 'Inter', sans-serif; outline: none; margin-bottom: 14px; transition: border-color 0.15s; }
 .inp:focus { border-color: #ffb400; }
-.btn-main { width: 100%; background: #ffb400; color: #1a1200; border: none; border-radius: 6px; padding: 13px; font-family: 'Space Mono', monospace; font-weight: 700; font-size: 17px; letter-spacing: 1px; cursor: pointer; }
+.btn-main { width: 100%; background: #ffb400; color: #1a1200; border: none; border-radius: 6px; padding: 13px; font-family: 'Teko', sans-serif; font-weight: 700; font-size: 17px; letter-spacing: 1px; cursor: pointer; }
 .btn-main:hover { background: #ffc733; }
 .btn-sub { width: 100%; background: none; border: 1px solid #2a2a2a; color: #7a7a7a; border-radius: 6px; padding: 10px; font-size: 13px; cursor: pointer; margin-top: 10px; font-family: 'Inter', sans-serif; }
 .btn-sub:hover { color: #f2f2f2; }
 
 /* CARD */
 .card { background: #0a0a0a; border: 1px solid #2a2a2a; border-radius: 10px; padding: 22px; margin-bottom: 16px; }
-.card-title { font-family: 'Space Mono', monospace; font-weight: 700; font-size: 19px; letter-spacing: 0.5px; color: #ffb400; margin-bottom: 4px; }
+.card-title { font-family: 'Teko', sans-serif; font-weight: 700; font-size: 24px; letter-spacing: 0.5px; color: #ffb400; margin-bottom: 4px; }
 .card-sub { font-size: 12px; color: #7a7a7a; margin-bottom: 18px; }
 
 /* INTRO OVERLAY */
 .overlay { position: fixed; inset: 0; background: #000000dd; display: flex; align-items: center; justify-content: center; z-index: 300; padding: 20px; }
 .intro-box { background: #0a0a0a; border: 1px solid #2a2a2a; border-radius: 12px; padding: 32px; max-width: 420px; width: 100%; text-align: center; }
 .intro-icon { font-size: 56px; margin-bottom: 16px; }
-.intro-title { font-family: 'Space Mono', monospace; font-weight: 700; font-size: 25px; color: #ffb400; letter-spacing: 1px; margin-bottom: 12px; }
+.intro-title { font-family: 'Teko', sans-serif; font-weight: 700; font-size: 32px; color: #ffb400; letter-spacing: 1px; margin-bottom: 12px; }
 .intro-text { font-size: 14px; color: #9a9a9a; line-height: 1.7; margin-bottom: 24px; }
-.btn-green { background: #3a2900; color: #ffb400; border: 1px solid #ffb40044; border-radius: 6px; padding: 12px 32px; font-family: 'Space Mono', monospace; font-weight: 700; font-size: 17px; letter-spacing: 1px; cursor: pointer; }
+.btn-green { background: #3a2900; color: #ffb400; border: 1px solid #ffb40044; border-radius: 6px; padding: 12px 32px; font-family: 'Teko', sans-serif; font-weight: 700; font-size: 17px; letter-spacing: 1px; cursor: pointer; }
 .btn-green:hover { background: #4a3400; }
 .btn-rojo { background: #2a0a0a; color: #ff3b3b; border: 1px solid #ff3b3b55; border-radius: 6px; padding: 8px 16px; font-size: 13px; cursor: pointer; font-family: 'Inter', sans-serif; }
 .btn-rojo:hover { background: #3a1010; }
 
 /* COUNTDOWN */
-.countdown { font-family: 'Space Mono', monospace; font-weight: 700; font-size: 110px; color: #ffb400; text-align: center; padding: 60px 0; }
+.countdown { font-family: 'Teko', sans-serif; font-weight: 700; font-size: 130px; color: #ffb400; text-align: center; padding: 60px 0; }
 
 /* RESULT OVERLAY */
-.result-overlay-pts { font-family: 'Space Mono', monospace; font-weight: 700; font-size: 70px; color: #ffb400; text-align: center; letter-spacing: 1px; line-height: 1; }
+.result-overlay-pts { font-family: 'Teko', sans-serif; font-weight: 700; font-size: 88px; color: #ffb400; text-align: center; letter-spacing: 1px; line-height: 1; }
 .result-overlay-lbl { text-align: center; color: #7a7a7a; font-size: 13px; margin: 6px 0 20px; }
 .result-mini-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
 .rms { background: #000000; border: 1px solid #2a2a2a; border-radius: 8px; padding: 12px; text-align: center; }
-.rms-val { font-family: 'Space Mono', monospace; font-weight: 700; font-size: 20px; color: #f2f2f2; }
+.rms-val { font-family: 'Teko', sans-serif; font-weight: 700; font-size: 25px; color: #f2f2f2; }
 .rms-lbl { font-size: 11px; color: #7a7a7a; margin-top: 2px; }
 .result-overlay-btns { display: flex; flex-direction: column; gap: 8px; }
 
@@ -119,28 +119,28 @@ body { background: #000000; color: #f2f2f2; font-family: 'Inter', sans-serif; mi
 .nivel-dificil  { background: #ff3b3b1a; color: #ff3b3b; border: 1px solid #ff3b3b44; }
 .nivel-muyDificil { background: #ff3b3b30; color: #ff3b3b; border: 1px solid #ff3b3b66; }
 .q-num { font-size: 12px; color: #7a7a7a; margin-bottom: 6px; }
-.q-text { font-family: 'Space Mono', monospace; font-weight: 700; font-size: 22px; line-height: 1.3; color: #f2f2f2; margin-bottom: 22px; }
+.q-text { font-family: 'Teko', sans-serif; font-weight: 700; font-size: 28px; line-height: 1.3; color: #f2f2f2; margin-bottom: 22px; }
 .opts { display: flex; flex-direction: column; gap: 9px; }
 .opt { background: #000000; border: 1.5px solid #2a2a2a; border-radius: 8px; padding: 13px 16px; color: #c8c8c8; font-size: 14px; cursor: pointer; text-align: left; font-family: 'Inter', sans-serif; transition: all 0.12s; display: flex; align-items: center; gap: 12px; }
 .opt:hover:not(:disabled) { border-color: #ffb400; color: #f2f2f2; }
 .opt.ok { background: #ffb40015; border-color: #ffb400; color: #ffb400; }
 .opt.ko { background: #ff3b3b15; border-color: #ff3b3b; color: #ff3b3b; }
 .opt:disabled { cursor: default; }
-.opt-letra { font-family: 'Space Mono', monospace; font-weight: 700; font-size: 14px; color: #7a7a7a; min-width: 18px; }
+.opt-letra { font-family: 'Teko', sans-serif; font-weight: 700; font-size: 14px; color: #7a7a7a; min-width: 18px; }
 .progress-row { display: flex; gap: 4px; margin-bottom: 18px; }
 .progress-dot { height: 4px; flex: 1; border-radius: 2px; background: #2a2a2a; }
 .progress-dot.done { background: #7a5200; }
 .progress-dot.current { background: #ffb400; }
 .racha-badge { display: inline-flex; align-items: center; gap: 6px; background: #ffb40015; border: 1px solid #ffb40040; border-radius: 20px; padding: 4px 12px; font-size: 13px; color: #ffb400; font-weight: 700; margin-bottom: 14px; }
 .score-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-.score-live { font-family: 'Space Mono', monospace; font-weight: 700; font-size: 24px; color: #ffb400; }
+.score-live { font-family: 'Teko', sans-serif; font-weight: 700; font-size: 30px; color: #ffb400; }
 
 /* RESULT FINAL TEST */
-.result-pts-big { font-family: 'Space Mono', monospace; font-weight: 700; font-size: 62px; color: #ffb400; text-align: center; }
+.result-pts-big { font-family: 'Teko', sans-serif; font-weight: 700; font-size: 78px; color: #ffb400; text-align: center; }
 .result-sub { text-align: center; color: #7a7a7a; font-size: 13px; margin-bottom: 6px; }
 .result-grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin: 18px 0; }
 .rs { background: #000000; border: 1px solid #2a2a2a; border-radius: 8px; padding: 14px; text-align: center; }
-.rs-val { font-family: 'Space Mono', monospace; font-weight: 700; font-size: 24px; color: #f2f2f2; }
+.rs-val { font-family: 'Teko', sans-serif; font-weight: 700; font-size: 30px; color: #f2f2f2; }
 .rs-lbl { font-size: 11px; color: #7a7a7a; margin-top: 2px; }
 .answer-review { display: flex; flex-direction: column; gap: 6px; margin-bottom: 20px; }
 .ar { padding: 10px 14px; border-radius: 8px; font-size: 13px; display: flex; align-items: flex-start; gap: 8px; }
@@ -161,7 +161,7 @@ body { background: #000000; color: #f2f2f2; font-family: 'Inter', sans-serif; mi
 .camp-name { font-size: 10px; color: #7a7a7a; text-align: center; max-width: 56px; }
 .camp-name.found { color: #ffb400; font-weight: 700; }
 .ali-info { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 12px; }
-.ali-form { color: #ffb400; font-family: 'Space Mono', monospace; font-weight: 700; font-size: 16px; }
+.ali-form { color: #ffb400; font-family: 'Teko', sans-serif; font-weight: 700; font-size: 20px; }
 .ali-partido { text-align: right; color: #7a7a7a; line-height: 1.6; }
 .ali-partido strong { color: #f2f2f2; }
 .guess-row { display: flex; gap: 8px; margin-bottom: 12px; }
@@ -176,7 +176,7 @@ body { background: #000000; color: #f2f2f2; font-family: 'Inter', sans-serif; mi
 .timer-bar { height: 6px; border-radius: 3px; background: #ffb400; transition: width 1s linear, background 0.5s; }
 .timer-bar.warn { background: #ff8a00; }
 .timer-bar.danger { background: #ff3b3b; }
-.timer-txt { font-family: 'Space Mono', monospace; font-weight: 700; font-size: 20px; color: #f2f2f2; margin-bottom: 6px; }
+.timer-txt { font-family: 'Teko', sans-serif; font-weight: 700; font-size: 25px; color: #f2f2f2; margin-bottom: 6px; }
 
 /* JUGADOR */
 .sil-wrap { display: flex; flex-direction: column; align-items: center; margin-bottom: 16px; }
@@ -194,12 +194,12 @@ body { background: #000000; color: #f2f2f2; font-family: 'Inter', sans-serif; mi
 /* COMBINA */
 .comb-reto { background: #000000; border: 2px solid #ff3b3b44; border-radius: 10px; padding: 20px; text-align: center; margin-bottom: 18px; }
 .comb-reto-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #7a7a7a; margin-bottom: 8px; }
-.comb-reto-txt { font-family: 'Space Mono', monospace; font-weight: 700; font-size: 28px; color: #ffb400; letter-spacing: 1px; }
+.comb-reto-txt { font-family: 'Teko', sans-serif; font-weight: 700; font-size: 36px; color: #ffb400; letter-spacing: 1px; }
 .comb-pts-row { display: flex; justify-content: center; gap: 24px; margin-bottom: 18px; }
 .comb-stat { text-align: center; }
-.comb-val { font-family: 'Space Mono', monospace; font-weight: 700; font-size: 28px; }
+.comb-val { font-family: 'Teko', sans-serif; font-weight: 700; font-size: 36px; }
 .comb-lbl { font-size: 11px; color: #7a7a7a; }
-.float-anim { animation: floatUp 0.6s ease forwards; position: fixed; pointer-events: none; font-family: 'Space Mono', monospace; font-weight: 700; font-size: 24px; z-index: 999; }
+.float-anim { animation: floatUp 0.6s ease forwards; position: fixed; pointer-events: none; font-family: 'Teko', sans-serif; font-weight: 700; font-size: 24px; z-index: 999; }
 @keyframes floatUp { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-60px); } }
 .btn-salto { background: #2a0a0a; color: #ff3b3b; border: 1px solid #ff3b3b44; border-radius: 6px; padding: 10px 16px; font-size: 14px; cursor: pointer; font-family: 'Inter', sans-serif; font-weight: 600; }
 .comb-history { display: flex; flex-direction: column; gap: 5px; margin-bottom: 14px; max-height: 150px; overflow-y: auto; }
@@ -215,34 +215,34 @@ body { background: #000000; color: #f2f2f2; font-family: 'Inter', sans-serif; mi
 .rank-row:hover { background: #0a0a0a; }
 .rank-row.top3 { border-color: #ffd70033; }
 .rank-row.me { border-color: #ffb40044; background: #ffb40008; }
-.rank-pos { font-family: 'Space Mono', monospace; font-weight: 700; font-size: 20px; width: 30px; text-align: center; }
+.rank-pos { font-family: 'Teko', sans-serif; font-weight: 700; font-size: 25px; width: 30px; text-align: center; }
 .pos-1 { color: #ffd700; } .pos-2 { color: #c0c0c0; } .pos-3 { color: #cd7f32; }
 .rank-name { flex: 1; font-size: 14px; font-weight: 500; }
-.rank-pts { font-family: 'Space Mono', monospace; font-weight: 700; font-size: 18px; color: #ffb400; }
+.rank-pts { font-family: 'Teko', sans-serif; font-weight: 700; font-size: 23px; color: #ffb400; }
 .rank-prize { font-size: 11px; color: #ffd700; }
 .desglose { background: #0a0a0a; border: 1px solid #2a2a2a; border-radius: 8px; padding: 16px; margin-top: 4px; margin-bottom: 10px; }
 .des-row { display: flex; justify-content: space-between; font-size: 13px; padding: 6px 0; border-bottom: 1px solid #2a2a2a33; }
 .des-row:last-child { border-bottom: none; }
 .des-lbl { color: #7a7a7a; }
-.des-val { font-family: 'Space Mono', monospace; font-weight: 700; font-size: 15px; color: #f2f2f2; }
+.des-val { font-family: 'Teko', sans-serif; font-weight: 700; font-size: 19px; color: #f2f2f2; }
 
 /* INICIO */
 .home-hero { background: #0a0a0a; border: 1px solid #2a2a2a; border-radius: 12px; padding: 28px; margin-bottom: 18px; text-align: center; }
-.home-pts { font-family: 'Space Mono', monospace; font-weight: 700; font-size: 56px; color: #ffb400; line-height: 1; }
+.home-pts { font-family: 'Teko', sans-serif; font-weight: 700; font-size: 70px; color: #ffb400; line-height: 1; }
 .home-pts-lbl { font-size: 13px; color: #7a7a7a; margin-top: 4px; }
 .mode-list { display: flex; flex-direction: column; gap: 10px; }
 .mode-item { background: #0a0a0a; border: 1px solid #2a2a2a; border-radius: 10px; padding: 16px 18px; display: flex; align-items: center; gap: 14px; cursor: pointer; transition: all 0.15s; }
 .mode-item:hover { border-color: #ffb40044; background: #111111; }
 .mode-icon { font-size: 30px; }
-.mode-name { font-family: 'Space Mono', monospace; font-weight: 700; font-size: 16px; color: #f2f2f2; }
+.mode-name { font-family: 'Teko', sans-serif; font-weight: 700; font-size: 20px; color: #f2f2f2; }
 .mode-desc { font-size: 12px; color: #7a7a7a; margin-top: 2px; }
-.mode-pts { font-family: 'Space Mono', monospace; font-weight: 700; font-size: 16px; color: #ffb400; margin-left: auto; }
+.mode-pts { font-family: 'Teko', sans-serif; font-weight: 700; font-size: 20px; color: #ffb400; margin-left: auto; }
 .mode-done { font-size: 20px; margin-left: auto; }
 
 /* PRÓXIMAMENTE */
 .prox-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 20px; text-align: center; }
 .prox-icon { font-size: 72px; margin-bottom: 20px; }
-.prox-title { font-family: 'Space Mono', monospace; font-weight: 700; font-size: 24px; color: #ffb400; letter-spacing: 1px; margin-bottom: 10px; }
+.prox-title { font-family: 'Teko', sans-serif; font-weight: 700; font-size: 30px; color: #ffb400; letter-spacing: 1px; margin-bottom: 10px; }
 .prox-text { font-size: 15px; color: #7a7a7a; line-height: 1.6; }
 
 .alert { border-radius: 6px; padding: 10px 14px; font-size: 13px; margin-bottom: 12px; }
@@ -297,8 +297,8 @@ function FinishOverlay({ icon, juego, pts, ptsBreakdown, scores, onContinue }) {
     <div className="overlay">
       <div className="intro-box" style={{ maxWidth: 360 }}>
         <div style={{ fontSize: 48, marginBottom: 10 }}>{icon}</div>
-        <div style={{ fontFamily: "'Space Mono',monospace", fontSize: 13, color: "#7a7a7a", letterSpacing: 2, marginBottom: 6, textTransform: "uppercase" }}>{juego} · Resultado</div>
-        <div style={{ fontFamily: "'Space Mono',monospace", fontSize: 90, color: "#ffb400", lineHeight: 1, textShadow: "0 0 30px #ffb40055", marginBottom: 4 }}>{pts}</div>
+        <div style={{ fontFamily: "'Teko',sans-serif", fontSize: 13, color: "#7a7a7a", letterSpacing: 2, marginBottom: 6, textTransform: "uppercase" }}>{juego} · Resultado</div>
+        <div style={{ fontFamily: "'Teko',sans-serif", fontSize: 90, color: "#ffb400", lineHeight: 1, textShadow: "0 0 30px #ffb40055", marginBottom: 4 }}>{pts}</div>
         <div style={{ fontSize: 13, color: "#7a7a7a", marginBottom: 20 }}>puntos conseguidos</div>
         {ptsBreakdown && (
           <div style={{ background: "#000000", border: "1px solid #2a2a2a", borderRadius: 10, padding: "12px 16px", marginBottom: 16, width: "100%" }}>
@@ -309,11 +309,11 @@ function FinishOverlay({ icon, juego, pts, ptsBreakdown, scores, onContinue }) {
           <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: 1, color: "#7a7a7a", marginBottom: 10 }}>Tu acumulado de hoy</div>
           <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14, marginBottom: 6 }}>
             <span style={{ color: "#9a9a9a" }}>Este juego</span>
-            <span style={{ fontFamily: "'Space Mono',monospace", fontSize: 18, color: "#ffb400" }}>{pts} pts</span>
+            <span style={{ fontFamily: "'Teko',sans-serif", fontSize: 18, color: "#ffb400" }}>{pts} pts</span>
           </div>
           <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14 }}>
             <span style={{ color: "#9a9a9a" }}>Total ranking hoy</span>
-            <span style={{ fontFamily: "'Space Mono',monospace", fontSize: 18, color: "#ffd700" }}>{total} pts</span>
+            <span style={{ fontFamily: "'Teko',sans-serif", fontSize: 18, color: "#ffd700" }}>{total} pts</span>
           </div>
         </div>
         <button className="btn-green" style={{ width: "100%", background: "#1a3a6b" }} onClick={onContinue}>VER RANKING →</button>
@@ -334,8 +334,8 @@ function ResultOverlay({ pts, juego, scores, onVerRanking, onClose, extras }) {
         {extras}
         <div className="rank-summary">
           <div className="rank-summary-title">Tu acumulado de hoy</div>
-          <div className="rank-summary-row"><span style={{ color: "#7a7a7a" }}>Puntos totales hoy</span><span style={{ fontFamily: "'Space Mono',monospace", fontSize: 18, color: "#ffb400" }}>{totalDiario}</span></div>
-          <div className="rank-summary-row"><span style={{ color: "#7a7a7a" }}>Posición estimada</span><span style={{ fontFamily: "'Space Mono',monospace", fontSize: 18, color: "#ffd700" }}>#4</span></div>
+          <div className="rank-summary-row"><span style={{ color: "#7a7a7a" }}>Puntos totales hoy</span><span style={{ fontFamily: "'Teko',sans-serif", fontSize: 18, color: "#ffb400" }}>{totalDiario}</span></div>
+          <div className="rank-summary-row"><span style={{ color: "#7a7a7a" }}>Posición estimada</span><span style={{ fontFamily: "'Teko',sans-serif", fontSize: 18, color: "#ffd700" }}>#4</span></div>
         </div>
         <div className="result-overlay-btns">
           <button className="btn-green" onClick={onVerRanking}>VER RANKING</button>
@@ -355,7 +355,7 @@ function Proximamente({ icon, nombre }) {
         <div className="prox-title">{nombre}</div>
         <div style={{ background: "#0a0a0a", border: "1px solid #2a2a2a", borderRadius: 12, padding: "20px 24px", margin: "16px 0", textAlign: "center" }}>
           <div style={{ fontSize: 32, marginBottom: 10 }}>🔧</div>
-          <div style={{ fontFamily: "'Space Mono',monospace", fontSize: 22, color: "#ffb400", letterSpacing: 1, marginBottom: 8 }}>ESTAMOS PREPARANDO EL JUEGO</div>
+          <div style={{ fontFamily: "'Teko',sans-serif", fontSize: 22, color: "#ffb400", letterSpacing: 1, marginBottom: 8 }}>ESTAMOS PREPARANDO EL JUEGO</div>
           <div style={{ fontSize: 14, color: "#9a9a9a", lineHeight: 1.7 }}>Estamos trabajando para ofrecerte la mejor experiencia.<br />Vuelve pronto, ¡no te lo pierdas!</div>
         </div>
         <div style={{ fontSize: 12, color: "#7a7a7a", textAlign: "center" }}>
@@ -486,10 +486,10 @@ function TestDiario({ onFinish, done, scores, preguntas }) {
       </div>
       <div className="rank-summary">
         <div className="rank-summary-title">Acumulado ranking de hoy</div>
-        <div className="rank-summary-row"><span style={{ color: "#9a9a9a" }}>✔ Test Diario</span><span style={{ color: "#ffb400", fontFamily: "'Space Mono',monospace", fontSize: 16 }}>{finalPts} pts</span></div>
-        <div className="rank-summary-row"><span style={{ color: "#9a9a9a" }}>Total acumulado hoy</span><span style={{ color: "#ffd700", fontFamily: "'Space Mono',monospace", fontSize: 16 }}>{Object.values(scores).reduce((a,b)=>a+b,0) + finalPts} pts</span></div>
+        <div className="rank-summary-row"><span style={{ color: "#9a9a9a" }}>✔ Test Diario</span><span style={{ color: "#ffb400", fontFamily: "'Teko',sans-serif", fontSize: 16 }}>{finalPts} pts</span></div>
+        <div className="rank-summary-row"><span style={{ color: "#9a9a9a" }}>Total acumulado hoy</span><span style={{ color: "#ffd700", fontFamily: "'Teko',sans-serif", fontSize: 16 }}>{Object.values(scores).reduce((a,b)=>a+b,0) + finalPts} pts</span></div>
       </div>
-      <div style={{ fontFamily: "'Space Mono',monospace", fontSize: 14, color: "#7a7a7a", letterSpacing: 1, marginBottom: 10 }}>REVISIÓN DE RESPUESTAS</div>
+      <div style={{ fontFamily: "'Teko',sans-serif", fontSize: 14, color: "#7a7a7a", letterSpacing: 1, marginBottom: 10 }}>REVISIÓN DE RESPUESTAS</div>
       <div className="answer-review">
         {answers.map((a, i) => (
           <div key={i} className={`ar ${a.correct ? "ar-ok" : "ar-ko"}`}>
@@ -665,8 +665,8 @@ function AdivinaAlineacion({ onFinish, done, scores, partido: ALINEACION }) {
       </div>
       <div className="rank-summary">
         <div className="rank-summary-title">Acumulado ranking de hoy</div>
-        <div className="rank-summary-row"><span style={{ color: "#9a9a9a" }}>🏟 Alineación</span><span style={{ color: "#ffb400", fontFamily: "'Space Mono',monospace", fontSize: 16 }}>{finalPts} pts</span></div>
-        <div className="rank-summary-row"><span style={{ color: "#9a9a9a" }}>Total acumulado hoy</span><span style={{ color: "#ffd700", fontFamily: "'Space Mono',monospace", fontSize: 16 }}>{Object.values(scores).reduce((a,b)=>a+b,0) + finalPts} pts</span></div>
+        <div className="rank-summary-row"><span style={{ color: "#9a9a9a" }}>🏟 Alineación</span><span style={{ color: "#ffb400", fontFamily: "'Teko',sans-serif", fontSize: 16 }}>{finalPts} pts</span></div>
+        <div className="rank-summary-row"><span style={{ color: "#9a9a9a" }}>Total acumulado hoy</span><span style={{ color: "#ffd700", fontFamily: "'Teko',sans-serif", fontSize: 16 }}>{Object.values(scores).reduce((a,b)=>a+b,0) + finalPts} pts</span></div>
       </div>
       <div style={{ marginBottom: 12 }}>
         <div style={{ fontSize: 12, color: "#7a7a7a", marginBottom: 8 }}>Alineación completa:</div>
@@ -812,8 +812,8 @@ function AdivinaJugador({ onFinish, done, scores, jugador: JUGADOR }) {
       </div>
       <div className="rank-summary">
         <div className="rank-summary-title">Acumulado ranking de hoy</div>
-        <div className="rank-summary-row"><span style={{ color: "#9a9a9a" }}>⚽ Jugador</span><span style={{ color: "#ffb400", fontFamily: "'Space Mono',monospace", fontSize: 16 }}>{finalPts} pts</span></div>
-        <div className="rank-summary-row"><span style={{ color: "#9a9a9a" }}>Total acumulado hoy</span><span style={{ color: "#ffd700", fontFamily: "'Space Mono',monospace", fontSize: 16 }}>{Object.values(scores).reduce((a,b)=>a+b,0) + finalPts} pts</span></div>
+        <div className="rank-summary-row"><span style={{ color: "#9a9a9a" }}>⚽ Jugador</span><span style={{ color: "#ffb400", fontFamily: "'Teko',sans-serif", fontSize: 16 }}>{finalPts} pts</span></div>
+        <div className="rank-summary-row"><span style={{ color: "#9a9a9a" }}>Total acumulado hoy</span><span style={{ color: "#ffd700", fontFamily: "'Teko',sans-serif", fontSize: 16 }}>{Object.values(scores).reduce((a,b)=>a+b,0) + finalPts} pts</span></div>
       </div>
     </div>
   );
@@ -981,8 +981,8 @@ function Combina({ onFinish, done, scores, combinas: COMBINAS }) {
       </div>
       <div className="rank-summary">
         <div className="rank-summary-title">Acumulado ranking de hoy</div>
-        <div className="rank-summary-row"><span style={{ color: "#7a7a7a" }}>🔍 Combina</span><span style={{ color: "#ffb400", fontFamily: "'Space Mono',monospace", fontSize: 16 }}>{finalPts} pts</span></div>
-        <div className="rank-summary-row"><span style={{ color: "#7a7a7a" }}>Total acumulado hoy</span><span style={{ color: "#ffd700", fontFamily: "'Space Mono',monospace", fontSize: 16 }}>{Object.values(scores).reduce((a,b)=>a+b,0) + finalPts} pts</span></div>
+        <div className="rank-summary-row"><span style={{ color: "#7a7a7a" }}>🔍 Combina</span><span style={{ color: "#ffb400", fontFamily: "'Teko',sans-serif", fontSize: 16 }}>{finalPts} pts</span></div>
+        <div className="rank-summary-row"><span style={{ color: "#7a7a7a" }}>Total acumulado hoy</span><span style={{ color: "#ffd700", fontFamily: "'Teko',sans-serif", fontSize: 16 }}>{Object.values(scores).reduce((a,b)=>a+b,0) + finalPts} pts</span></div>
       </div>
       {history.length > 0 && (
         <>
@@ -1007,7 +1007,7 @@ function Combina({ onFinish, done, scores, combinas: COMBINAS }) {
       ))}
       <div className="score-row">
         <div className="score-live">⚡ {ptsActuales} pts</div>
-        <div style={{ fontFamily: "'Space Mono',monospace", fontSize: 22, color: timeLeft <= 30 ? "#ff3b3b" : "#f2f2f2" }}>
+        <div style={{ fontFamily: "'Teko',sans-serif", fontSize: 22, color: timeLeft <= 30 ? "#ff3b3b" : "#f2f2f2" }}>
           {Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, "0")}
         </div>
       </div>
@@ -1383,7 +1383,7 @@ export default function App() {
   if (checkingSession) return (
     <div style={{ background: "#0a0a0f", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
       <style>{css}</style>
-      <div style={{ fontFamily: "'Space Mono',monospace", fontSize: 24, color: "#ffb400", letterSpacing: 2 }}>CARGANDO...</div>
+      <div style={{ fontFamily: "'Teko',sans-serif", fontSize: 24, color: "#ffb400", letterSpacing: 2 }}>CARGANDO...</div>
     </div>
   );
 
@@ -1422,7 +1422,7 @@ export default function App() {
   if (loadingContent) return (
     <div style={{ background: "#0a0a0f", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
       <style>{css}</style>
-      <div style={{ fontFamily: "'Space Mono',monospace", fontSize: 24, color: "#ffb400", letterSpacing: 2 }}>CARGANDO CONTENIDO...</div>
+      <div style={{ fontFamily: "'Teko',sans-serif", fontSize: 24, color: "#ffb400", letterSpacing: 2 }}>CARGANDO CONTENIDO...</div>
     </div>
   );
 
@@ -1464,7 +1464,7 @@ export default function App() {
               <div className="home-pts">{totalPts}</div>
               <div className="home-pts-lbl">¡Juega todos los modos para sumar más!</div>
             </div>
-            <div style={{ fontFamily: "'Space Mono',monospace", fontSize: 14, color: "#7a7a7a", letterSpacing: 2, marginBottom: 12 }}>MODOS DE HOY</div>
+            <div style={{ fontFamily: "'Teko',sans-serif", fontSize: 14, color: "#7a7a7a", letterSpacing: 2, marginBottom: 12 }}>MODOS DE HOY</div>
             <div className="mode-list">
               {modes.map(m => (
                 <div key={m.id} className="mode-item" onClick={() => setTab(m.id)}>
