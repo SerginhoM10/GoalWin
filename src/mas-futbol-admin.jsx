@@ -398,7 +398,7 @@ function SecAlineaciones({ data, setData }) {
               <label className="lbl">URL de la foto del partido (opcional)</label>
               <input className="inp" placeholder="https://... (enlace directo a imagen)" value={form.foto_url}
                 onChange={e => setForm(f => ({ ...f, foto_url: e.target.value }))} />
-              {form.foto_url && <img src={form.foto_url} alt="Preview" style={{ width: "100%", maxHeight: 160, objectFit: "cover", borderRadius: 8, marginTop: 8, border: "2px solid #1e3d25" }} />}
+              {form.foto_url && <img src={form.foto_url} alt="Preview" style={{ width: "100%", aspectRatio: "16 / 9", objectFit: "cover", borderRadius: 8, marginTop: 8, border: "2px solid #1e3d25", display: "block" }} />}
             </div>
           </div>
           <hr className="divider" />

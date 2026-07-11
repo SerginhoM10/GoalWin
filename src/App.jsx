@@ -683,8 +683,8 @@ function AdivinaAlineacion({ onFinish, done, scores, partido: ALINEACION }) {
       <div className="timer-bar-wrap"><div className={`timer-bar${barCls}`} style={{ width: `${pct}%` }} /></div>
       {msg && <div className={`alert alert-${msg.type === "ok" ? "ok" : "ko"}`}>{msg.text}</div>}
       {ALINEACION.foto_url && (
-        <div style={{ marginBottom: 12, borderRadius: 10, overflow: "hidden", border: "1px solid #1a2a45" }}>
-          <img src={ALINEACION.foto_url} alt="Foto del partido" style={{ width: "100%", objectFit: "cover", maxHeight: 160 }} />
+        <div style={{ marginBottom: 12, borderRadius: 10, overflow: "hidden", border: "1px solid #1a2a45", aspectRatio: "16 / 9", width: "100%" }}>
+          <img src={ALINEACION.foto_url} alt="Foto del partido" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
         </div>
       )}
       <div className="campo">
