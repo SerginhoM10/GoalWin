@@ -1097,6 +1097,7 @@ function PrecioJusto({ onFinish, done, scores, reto: RETO }) {
 
   const pedirPista = async (jugadorId) => {
     if (pistas[jugadorId] || pidiendoPista) return;
+    if (!window.confirm("Esta pista te restará 100 puntos de tu puntuación final. ¿Quieres pedirla?")) return;
     setPidiendoPista(jugadorId);
     const { data } = await supabase.rpc("precio_pedir_pista", { p_jugador_id: jugadorId }).maybeSingle();
     if (data) setPistas(p => ({ ...p, [jugadorId]: data }));
@@ -1663,6 +1664,7 @@ export default function App() {
           ["alineacion","🏟 ALINEACIÓN"],
           ["jugador",   "⚽ JUGADOR"],
           ["combina",   "🔍 COMBINA"],
+          ["precio",    "💰 PRECIO"],
           ["ranking",   "🏆 RANKING"],
         ].map(([id, label]) => (
           <button key={id} className={`nav-btn ${tab === id ? "on" : ""}`} onClick={() => setTab(id)}>{label}</button>
@@ -1688,7 +1690,7 @@ export default function App() {
                   {m.maxPts === null
                     ? <div style={{ marginLeft: "auto", fontSize: 11, color: "#7a7a7a" }}>PRONTO</div>
                     : done[m.id]
-                      ? <div className="mode-done">✅</div>
+                      ? <div className="mode-pts">✓ {scores[m.id] || 0}</div>
                       : <div className="mode-pts">+{m.maxPts}</div>
                   }
                 </div>

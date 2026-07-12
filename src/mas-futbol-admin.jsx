@@ -750,7 +750,8 @@ function SecPrecios({ data, setData }) {
     const jugadoresPayload = form.jugadores.map((j, i) => ({
       reto_id: retoId, nombre: j.nombre, foto_url: j.foto_url || null,
       valor_real: parseInt(j.valor_real), pista_posicion: j.pista_posicion,
-      pista_valor: calcularDigito(j.valor_real, j.pista_posicion), orden: i,
+      pista_valor: (j.pista_valor ?? "").toString().trim() || calcularDigito(j.valor_real, j.pista_posicion),
+      orden: i,
     }));
     const { error: errJ } = await supabase.from("precios_jugadores").insert(jugadoresPayload);
     if (errJ) { showAlert("Error al guardar jugadores: " + errJ.message, "ko"); return; }
@@ -836,9 +837,8 @@ function SecPrecios({ data, setData }) {
                   onChange={e => setJug(i, "pista_posicion", e.target.value)}>
                   {POSICIONES_PISTA.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}
                 </select>
-                <span style={{ fontSize: 12, color: "#a8ff3e" }}>
-                  Pista: {j.valor_real ? calcularDigito(j.valor_real, j.pista_posicion) : "—"}
-                </span>
+                <input className="inp" placeholder="Valor de la pista" value={j.pista_valor ?? (j.valor_real ? calcularDigito(j.valor_real, j.pista_posicion) : "")}
+                  style={{ width: 110 }} onChange={e => setJug(i, "pista_valor", e.target.value)} />
                 {form.jugadores.length > 3 && (
                   <button className="btn-del" onClick={() => removeJugador(i)}>Quitar</button>
                 )}
