@@ -1058,6 +1058,129 @@ function Combina({ onFinish, done, scores, combinas: COMBINAS }) {
   );
 }
 
+// ─── PRECIO JUSTO ─────────────────────────────────────────────────────────────
+function PrecioJusto({ onFinish, done, scores, reto: RETO }) {
+  const [phase, setPhase] = useState("intro");
+  const [respuestas, setRespuestas] = useState({});
+  const [pistas, setPistas] = useState({});
+  const [pidiendoPista, setPidiendoPista] = useState(null);
+  const [finished, setFinished] = useState(false);
+  const [showOverlay, setShowOverlay] = useState(false);
+  const [resultado, setResultado] = useState([]);
+  const [finalPts, setFinalPts] = useState(0);
+  const [enviando, setEnviando] = useState(false);
+
+  if (!RETO || !RETO.jugadores || RETO.jugadores.length === 0) return (
+    <div className="card">
+      <div className="card-title">💰 EL PRECIO JUSTO</div>
+      <div className="alert alert-inf">Todavía no hay ningún reto configurado para hoy.</div>
+    </div>
+  );
+
+  if (done && !finished) return (
+    <div className="card">
+      <div className="card-title">💰 EL PRECIO JUSTO</div>
+      <div className="alert alert-ok">✅ Ya jugaste El Precio Justo de hoy. ¡Vuelve mañana!</div>
+    </div>
+  );
+
+  if (phase === "intro") return (
+    <IntroModal icon="💰" title="EL PRECIO JUSTO"
+      text={`Reparte un presupuesto de ${RETO.presupuesto}M entre los ${RETO.jugadores.length} jugadores, acertando el precio real de cada uno. El total gastado debe cuadrar exactamente con el presupuesto para poder enviar. ¡Cuidado, no te pases!`}
+      onStart={() => setPhase("playing")} />
+  );
+
+  const gastado = RETO.jugadores.reduce((sum, j) => sum + (parseInt(respuestas[j.id]) || 0), 0);
+  const restante = RETO.presupuesto - gastado;
+  const todosRellenos = RETO.jugadores.every(j => respuestas[j.id] !== undefined && respuestas[j.id] !== "");
+  const puedeEnviar = todosRellenos && restante === 0;
+
+  const pedirPista = async (jugadorId) => {
+    if (pistas[jugadorId] || pidiendoPista) return;
+    setPidiendoPista(jugadorId);
+    const { data } = await supabase.rpc("precio_pedir_pista", { p_jugador_id: jugadorId }).maybeSingle();
+    if (data) setPistas(p => ({ ...p, [jugadorId]: data }));
+    setPidiendoPista(null);
+  };
+
+  const enviar = async () => {
+    if (!puedeEnviar || enviando) return;
+    setEnviando(true);
+    const p_respuestas = RETO.jugadores.map(j => ({ jugador_id: j.id, valor: parseInt(respuestas[j.id]) || 0 }));
+    const { data } = await supabase.rpc("precio_comprobar", { p_reto_id: RETO.id, p_respuestas });
+    const filas = data || [];
+    const penalizacion = Object.keys(pistas).length * 100;
+    const pts = Math.max(0, filas.reduce((s, f) => s + f.pts, 0) - penalizacion);
+    setResultado(filas);
+    setFinalPts(pts);
+    setFinished(true);
+    setShowOverlay(true);
+    setEnviando(false);
+  };
+
+  if (showOverlay) return (
+    <FinishOverlay icon="💰" juego="El Precio Justo" pts={finalPts} scores={scores}
+      onContinue={() => { setShowOverlay(false); onFinish && onFinish(finalPts); }} />
+  );
+
+  if (finished) return (
+    <div className="card">
+      <div className="card-title">💰 EL PRECIO JUSTO</div>
+      <div className="result-pts-big">{finalPts}</div>
+      <div className="result-sub">puntos conseguidos</div>
+      <div className="answer-review">
+        {resultado.map(f => (
+          <div key={f.jugador_id} className={`ar ${f.resultado === "fallo" ? "ar-ko" : "ar-ok"}`}>
+            <span>{f.resultado === "exacto" ? "✔" : f.resultado === "cerca" ? "🟡" : "❌"}</span>
+            <span><strong>{f.nombre}</strong> · Real: {f.valor_real}M · Tu apuesta: {f.valor_usuario}M · {f.pts} pts</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="card">
+      <div className="card-title">💰 EL PRECIO JUSTO</div>
+      <div className="card-sub">Reparte el presupuesto entre los {RETO.jugadores.length} jugadores</div>
+
+      <div className="result-mini-grid" style={{ marginBottom: 18 }}>
+        <div className="rms"><div className="rms-val">{RETO.presupuesto}M</div><div className="rms-lbl">Presupuesto</div></div>
+        <div className="rms"><div className="rms-val" style={{ color: restante < 0 ? "#ff3b3b" : restante === 0 ? "#ffb400" : "#f2f2f2" }}>{restante}M</div><div className="rms-lbl">Restante</div></div>
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 18 }}>
+        {RETO.jugadores.map(j => (
+          <div key={j.id} style={{ background: "#000000", border: "1px solid #2a2a2a", borderRadius: 8, padding: 12, display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+            {j.foto_url ? (
+              <img src={j.foto_url} alt={j.nombre} style={{ width: 48, height: 48, borderRadius: "50%", objectFit: "cover" }} />
+            ) : (
+              <div style={{ width: 48, height: 48, borderRadius: "50%", background: "#0a0a0a", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22 }}>⚽</div>
+            )}
+            <div style={{ flex: 1, minWidth: 120 }}>
+              <div style={{ fontFamily: "'Teko',sans-serif", fontWeight: 700, fontSize: 18, color: "#f2f2f2" }}>{j.nombre}</div>
+              <div style={{ fontSize: 11, color: "#7a7a7a" }}>
+                {"‗".repeat(j.num_digitos)} ({j.num_digitos} cifras)
+                {pistas[j.id] && <span style={{ color: "#ffb400" }}> · {pistas[j.id].posicion} dígito = {pistas[j.id].digito}</span>}
+              </div>
+            </div>
+            <input className="inp" type="number" placeholder="0" style={{ width: 90, marginBottom: 0, textAlign: "right" }}
+              value={respuestas[j.id] || ""} onChange={e => setRespuestas(r => ({ ...r, [j.id]: e.target.value }))} />
+            <button className="btn-send" style={{ padding: "10px 12px", opacity: pistas[j.id] ? 0.4 : 1 }}
+              disabled={!!pistas[j.id] || pidiendoPista === j.id} onClick={() => pedirPista(j.id)}>
+              {pidiendoPista === j.id ? "..." : "💡 -100"}
+            </button>
+          </div>
+        ))}
+      </div>
+
+      <button className="btn-main" disabled={!puedeEnviar || enviando} style={{ opacity: puedeEnviar ? 1 : 0.4 }} onClick={enviar}>
+        {enviando ? "ENVIANDO..." : "ENVIAR"}
+      </button>
+    </div>
+  );
+}
+
 // ─── RANKING ──────────────────────────────────────────────────────────────────
 function Ranking({ user, scores }) {
   const [tab, setTab] = useState("diario");
@@ -1108,7 +1231,7 @@ function Ranking({ user, scores }) {
     const d = new Date(fechaStr + "T00:00:00");
     return DIAS_SEMANA[d.getDay() === 0 ? 6 : d.getDay() - 1];
   };
-  const totalDia = (row) => (row?.test_pts || 0) + (row?.alineacion_pts || 0) + (row?.jugador_pts || 0) + (row?.combina_pts || 0);
+  const totalDia = (row) => (row?.test_pts || 0) + (row?.alineacion_pts || 0) + (row?.jugador_pts || 0) + (row?.combina_pts || 0) + (row?.precio_pts || 0);
 
   return (
     <div className="card">
@@ -1156,6 +1279,7 @@ function Ranking({ user, scores }) {
                       <div className="des-row"><span className="des-lbl">🏟 Alineación</span><span className="des-val">{filas[0]?.alineacion_pts || 0} pts</span></div>
                       <div className="des-row"><span className="des-lbl">⚽ Jugador</span><span className="des-val">{filas[0]?.jugador_pts || 0} pts</span></div>
                       <div className="des-row"><span className="des-lbl">🔍 Combina</span><span className="des-val">{filas[0]?.combina_pts || 0} pts</span></div>
+                      <div className="des-row"><span className="des-lbl">💰 Precio Justo</span><span className="des-val">{filas[0]?.precio_pts || 0} pts</span></div>
                     </>
                   ) : filas.length === 0 ? (
                     <div style={{ fontSize: 13, color: "#7a7a7a", textAlign: "center", padding: "6px 0" }}>Sin puntos esta semana todavía.</div>
@@ -1191,7 +1315,7 @@ export default function App() {
   // vuelve a la pantalla anterior de la app en vez de salir de la web.
   const TAB_PATHS = {
     inicio: "/", test: "/test-diario", alineacion: "/alineacion",
-    jugador: "/jugador-misterio", combina: "/combina", ranking: "/ranking",
+    jugador: "/jugador-misterio", combina: "/combina", precio: "/precio-justo", ranking: "/ranking",
   };
   const pathToTab = (path) => Object.keys(TAB_PATHS).find(k => TAB_PATHS[k] === path) || "inicio";
 
@@ -1212,15 +1336,16 @@ export default function App() {
     return () => window.removeEventListener("popstate", onPopState);
   }, []);
   const setTab = goTo;
-  const [scores, setScores] = useState({ test: 0, alineacion: 0, jugador: 0, combina: 0 });
-  const [done, setDone] = useState({ test: false, alineacion: false, jugador: false, combina: false });
+  const [scores, setScores] = useState({ test: 0, alineacion: 0, jugador: 0, combina: 0, precio: 0 });
+  const [done, setDone] = useState({ test: false, alineacion: false, jugador: false, combina: false, precio: false });
 
   // Contenido cargado desde Supabase
-  const [juegosActivos, setJuegosActivos] = useState({ test: false, alineacion: false, jugador: false, combina: false });
+  const [juegosActivos, setJuegosActivos] = useState({ test: false, alineacion: false, jugador: false, combina: false, precio: false });
   const [preguntasHoy, setPreguntasHoy] = useState([]);
   const [partidoHoy, setPartidoHoy] = useState(null);
   const [jugadorHoy, setJugadorHoy] = useState(null);
   const [combinasHoy, setCombinasHoy] = useState([]);
+  const [precioHoy, setPrecioHoy] = useState(null);
   const [loadingContent, setLoadingContent] = useState(true);
 
   const totalPts = Object.values(scores).reduce((a, b) => a + b, 0);
@@ -1309,6 +1434,21 @@ export default function App() {
         })));
       }
 
+      // Precio Justo del día (el valor real de cada jugador NO viaja aquí,
+      // solo se pide al servidor al pedir una pista o al enviar la solución)
+      const { data: pr2 } = await supabase.from("precios_retos").select("*");
+      if (pr2 && pr2.length > 0) {
+        const rand = seededRand(semilla + 40);
+        const idx = Math.floor(rand() * pr2.length);
+        const reto = pr2[idx];
+        const { data: jugs } = await supabase
+          .from("precios_jugadores_publicos")
+          .select("*")
+          .eq("reto_id", reto.id)
+          .order("orden");
+        setPrecioHoy({ id: reto.id, presupuesto: reto.presupuesto, jugadores: jugs || [] });
+      }
+
       setLoadingContent(false);
     };
     loadContent();
@@ -1358,17 +1498,19 @@ export default function App() {
           alineacion: data.alineacion_pts ?? 0,
           jugador: data.jugador_pts ?? 0,
           combina: data.combina_pts ?? 0,
+          precio: data.precio_pts ?? 0,
         });
         setDone({
           test: data.test_pts !== null,
           alineacion: data.alineacion_pts !== null,
           jugador: data.jugador_pts !== null,
           combina: data.combina_pts !== null,
+          precio: data.precio_pts !== null,
         });
       } else {
         // No hay fila para hoy todavía: es un día nuevo, nada jugado aún
-        setScores({ test: 0, alineacion: 0, jugador: 0, combina: 0 });
-        setDone({ test: false, alineacion: false, jugador: false, combina: false });
+        setScores({ test: 0, alineacion: 0, jugador: 0, combina: 0, precio: 0 });
+        setDone({ test: false, alineacion: false, jugador: false, combina: false, precio: false });
       }
     };
     loadProgresoHoy();
@@ -1400,6 +1542,7 @@ export default function App() {
         p_alineacion: newDone.alineacion ? newScores.alineacion : null,
         p_jugador: newDone.jugador ? newScores.jugador : null,
         p_combina: newDone.combina ? newScores.combina : null,
+        p_precio: newDone.precio ? newScores.precio : null,
       });
     }
   };
@@ -1499,6 +1642,7 @@ export default function App() {
     { id: "alineacion",icon: "🏟", name: "ADIVINA LA ALINEACIÓN",  desc: "2 minutos para los 11 jugadores",                maxPts: 200 },
     { id: "jugador",   icon: "⚽", name: "ADIVINA EL JUGADOR",     desc: "5 pistas progresivas · Sin tiempo",              maxPts: 300 },
     { id: "combina",   icon: "🔍", name: "COMBINA",                desc: "1 minuto · Máximas combinaciones",              maxPts: 400 },
+    { id: "precio",    icon: "💰", name: "EL PRECIO JUSTO",         desc: "Reparte el presupuesto entre los jugadores",    maxPts: 1000 },
   ];
 
   return (
@@ -1556,6 +1700,7 @@ export default function App() {
         {tab === "alineacion" && (juegosActivos.alineacion  ? <AdivinaAlineacion done={done.alineacion} scores={scores} partido={partidoHoy} onFinish={(pts) => handleFinish("alineacion", pts)} /> : <Proximamente icon="🏟" nombre="ADIVINA LA ALINEACIÓN" />)}
         {tab === "jugador"    && (juegosActivos.jugador      ? <AdivinaJugador    done={done.jugador}    scores={scores} jugador={jugadorHoy} onFinish={(pts) => handleFinish("jugador", pts)} />    : <Proximamente icon="⚽" nombre="ADIVINA EL JUGADOR" />)}
         {tab === "combina"    && (juegosActivos.combina      ? <Combina           done={done.combina}    scores={scores} combinas={combinasHoy} onFinish={(pts) => handleFinish("combina", pts)} />    : <Proximamente icon="🔍" nombre="COMBINA" />)}
+        {tab === "precio"     && (juegosActivos.precio       ? <PrecioJusto       done={done.precio}     scores={scores} reto={precioHoy}       onFinish={(pts) => handleFinish("precio", pts)} />      : <Proximamente icon="💰" nombre="EL PRECIO JUSTO" />)}
         {tab === "ranking"    && <Ranking user={user} scores={scores} />}
       </main>
     </div>

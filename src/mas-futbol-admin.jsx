@@ -685,6 +685,181 @@ function SecUsuarios() {
   );
 }
 
+function calcularDigito(valorReal, posicion) {
+  const str = String(parseInt(valorReal) || 0);
+  const idx = { primero: 0, segundo: 1, tercero: 2, cuarto: 3, quinto: 4, ultimo: str.length - 1 }[posicion];
+  return str[idx] ?? "";
+}
+const POSICIONES_PISTA = [
+  { id: "primero", label: "Primer dígito" },
+  { id: "segundo", label: "Segundo dígito" },
+  { id: "tercero", label: "Tercer dígito" },
+  { id: "cuarto",  label: "Cuarto dígito" },
+  { id: "quinto",  label: "Quinto dígito" },
+  { id: "ultimo",  label: "Último dígito" },
+];
+
+// ─── PRECIO JUSTO ─────────────────────────────────────────────────────────────
+function SecPrecios({ data, setData }) {
+  const [view, setView] = useState("lista");
+  const [editing, setEditing] = useState(null);
+  const [alert, setAlert] = useState(null);
+  const emptyJug = { nombre: "", foto_url: "", valor_real: "", pista_posicion: "primero" };
+  const emptyForm = { presupuesto: "", jugadores: [{ ...emptyJug }, { ...emptyJug }, { ...emptyJug }, { ...emptyJug }] };
+  const [form, setForm] = useState(emptyForm);
+
+  const showAlert = (msg, type = "ok") => { setAlert({ msg, type }); setTimeout(() => setAlert(null), 3500); };
+
+  const openNew = () => { setForm(emptyForm); setEditing(null); setView("nueva"); };
+  const openEdit = (r) => { setForm({ presupuesto: r.presupuesto, jugadores: r.jugadores.map(j => ({ ...j })) }); setEditing(r.id); setView("nueva"); };
+
+  const setJug = (i, field, val) => {
+    setForm(f => ({ ...f, jugadores: f.jugadores.map((j, idx) => idx === i ? { ...j, [field]: val } : j) }));
+  };
+  const addJugador = () => {
+    if (form.jugadores.length >= 10) return;
+    setForm(f => ({ ...f, jugadores: [...f.jugadores, { ...emptyJug }] }));
+  };
+  const removeJugador = (i) => {
+    if (form.jugadores.length <= 3) return;
+    setForm(f => ({ ...f, jugadores: f.jugadores.filter((_, idx) => idx !== i) }));
+  };
+
+  const sumaValores = form.jugadores.reduce((s, j) => s + (parseInt(j.valor_real) || 0), 0);
+
+  const save = async () => {
+    if (!form.presupuesto || form.jugadores.some(j => !j.nombre || j.valor_real === "")) {
+      showAlert("Completa el presupuesto y el valor real de todos los jugadores.", "ko"); return;
+    }
+    if (sumaValores !== parseInt(form.presupuesto)) {
+      showAlert(`La suma de los valores reales (${sumaValores}M) tiene que coincidir exactamente con el presupuesto (${form.presupuesto}M). El reto no se puede resolver si no cuadra.`, "ko");
+      return;
+    }
+
+    let retoId = editing;
+    if (editing) {
+      const { error } = await supabase.from("precios_retos").update({ presupuesto: form.presupuesto }).eq("id", editing);
+      if (error) { showAlert("Error: " + error.message, "ko"); return; }
+      await supabase.from("precios_jugadores").delete().eq("reto_id", editing);
+    } else {
+      const { data: inserted, error } = await supabase.from("precios_retos").insert({ presupuesto: form.presupuesto }).select().single();
+      if (error) { showAlert("Error: " + error.message, "ko"); return; }
+      retoId = inserted.id;
+    }
+
+    const jugadoresPayload = form.jugadores.map((j, i) => ({
+      reto_id: retoId, nombre: j.nombre, foto_url: j.foto_url || null,
+      valor_real: parseInt(j.valor_real), pista_posicion: j.pista_posicion,
+      pista_valor: calcularDigito(j.valor_real, j.pista_posicion), orden: i,
+    }));
+    const { error: errJ } = await supabase.from("precios_jugadores").insert(jugadoresPayload);
+    if (errJ) { showAlert("Error al guardar jugadores: " + errJ.message, "ko"); return; }
+
+    const nuevoReto = { id: retoId, presupuesto: form.presupuesto, jugadores: form.jugadores };
+    if (editing) setData(d => d.map(r => r.id === editing ? nuevoReto : r));
+    else setData(d => [...d, nuevoReto]);
+    showAlert(editing ? "Reto actualizado." : "Reto añadido.");
+    setView("lista");
+  };
+
+  const del = async (id) => {
+    if (!confirm("¿Eliminar?")) return;
+    await supabase.from("precios_jugadores").delete().eq("reto_id", id);
+    const { error } = await supabase.from("precios_retos").delete().eq("id", id);
+    if (error) { showAlert("Error: " + error.message, "ko"); return; }
+    setData(d => d.filter(r => r.id !== id));
+  };
+
+  return (
+    <div>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+        <div>
+          <div className="page-title">💰 EL PRECIO JUSTO</div>
+          <div className="page-sub">Banco de retos · {data.length} retos en total</div>
+        </div>
+        {view === "lista" && <button className="btn-add" onClick={openNew}>+ NUEVO RETO</button>}
+      </div>
+      {alert && <div className={`alert alert-${alert.type}`}>{alert.msg}</div>}
+
+      {view === "lista" && (
+        <div className="card">
+          {data.length === 0 ? <div className="empty">No hay retos aún.</div> : (
+            <table className="tbl">
+              <thead><tr><th>Presupuesto</th><th>Jugadores</th><th></th></tr></thead>
+              <tbody>
+                {data.map(r => (
+                  <tr key={r.id}>
+                    <td><strong>{r.presupuesto}M</strong></td>
+                    <td style={{ color: "#6b8f71" }}>{r.jugadores.map(j => j.nombre).join(", ")}</td>
+                    <td><div style={{ display: "flex", gap: 6 }}>
+                      <button className="btn-edit" onClick={() => openEdit(r)}>Editar</button>
+                      <button className="btn-del" onClick={() => del(r.id)}>Eliminar</button>
+                    </div></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      )}
+
+      {view === "nueva" && (
+        <div className="card">
+          <div className="card-title">{editing ? "EDITAR RETO" : "NUEVO RETO"}</div>
+          <hr className="divider" />
+          <div className="form-grid">
+            <div className="inp-group">
+              <label className="lbl">Presupuesto total (millones)</label>
+              <input className="inp" type="number" placeholder="500" value={form.presupuesto}
+                onChange={e => setForm(f => ({ ...f, presupuesto: e.target.value }))} />
+            </div>
+            <div className="inp-group">
+              <label className="lbl">Suma actual de los valores reales</label>
+              <div className="inp" style={{ color: sumaValores === parseInt(form.presupuesto || 0) && form.presupuesto ? "#a8ff3e" : "#e74c3c", display: "flex", alignItems: "center" }}>
+                {sumaValores}M {form.presupuesto && (sumaValores === parseInt(form.presupuesto) ? "✅" : "❌ no cuadra")}
+              </div>
+            </div>
+          </div>
+          <hr className="divider" />
+          <div className="lbl" style={{ marginBottom: 12 }}>
+            JUGADORES ({form.jugadores.length}/10, mínimo 3) — la suma de sus valores reales debe ser igual al presupuesto
+          </div>
+          {form.jugadores.map((j, i) => (
+            <div key={i} style={{ background: "#0a0a0f", border: "1px solid #1e3d25", borderRadius: 8, padding: 12, marginBottom: 10 }}>
+              <div style={{ display: "flex", gap: 8, marginBottom: 8, alignItems: "center", flexWrap: "wrap" }}>
+                <span style={{ fontFamily: "'Bebas Neue',sans-serif", color: "#6b8f71", minWidth: 20 }}>{i + 1}</span>
+                <input className="inp" placeholder="Nombre del jugador" value={j.nombre} style={{ flex: 1, minWidth: 140 }}
+                  onChange={e => setJug(i, "nombre", e.target.value)} />
+                <input className="inp" type="number" placeholder="Valor real (M)" value={j.valor_real} style={{ width: 130 }}
+                  onChange={e => setJug(i, "valor_real", e.target.value)} />
+                <select className="sel" value={j.pista_posicion} style={{ width: 160 }}
+                  onChange={e => setJug(i, "pista_posicion", e.target.value)}>
+                  {POSICIONES_PISTA.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}
+                </select>
+                <span style={{ fontSize: 12, color: "#a8ff3e" }}>
+                  Pista: {j.valor_real ? calcularDigito(j.valor_real, j.pista_posicion) : "—"}
+                </span>
+                {form.jugadores.length > 3 && (
+                  <button className="btn-del" onClick={() => removeJugador(i)}>Quitar</button>
+                )}
+              </div>
+              <input className="inp" placeholder="URL de la foto del jugador (opcional)" value={j.foto_url}
+                onChange={e => setJug(i, "foto_url", e.target.value)} />
+            </div>
+          ))}
+          {form.jugadores.length < 10 && (
+            <button className="btn-ghost" style={{ marginBottom: 16 }} onClick={addJugador}>+ Añadir jugador</button>
+          )}
+          <div className="btn-row">
+            <button className="btn-ghost" onClick={() => setView("lista")}>Cancelar</button>
+            <button className="btn-add" onClick={save}>{editing ? "GUARDAR CAMBIOS" : "AÑADIR RETO"}</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── ROOT ─────────────────────────────────────────────────────────────────────
 export default function Admin() {
   const [checkingSession, setCheckingSession] = useState(true);
@@ -704,6 +879,7 @@ export default function Admin() {
   const [alineaciones, setAlineaciones] = useState([]);
   const [jugadores, setJugadores] = useState([]);
   const [combinas, setCombinas] = useState([]);
+  const [precios, setPrecios] = useState([]);
 
   // Comprueba si ya hay sesión activa (por ejemplo, al refrescar la página)
   useEffect(() => {
@@ -726,6 +902,14 @@ export default function Admin() {
   // Comprueba, contra la base de datos (no en el navegador), si este usuario
   // que ha iniciado sesión está en la tabla "admins". Esto es lo que impide que
   // cualquiera con una cuenta normal de Goal Win pueda entrar al panel.
+  //
+  // OJO: depende de "session?.user?.id" y no de "session" entero a propósito.
+  // Supabase renueva el token en segundo plano de vez en cuando (sobre todo al
+  // volver a la pestaña tras un rato fuera), y eso genera un objeto "session"
+  // nuevo aunque sigas siendo el mismo usuario. Si dependiéramos del objeto
+  // entero, cada renovación repetía esta comprobación y te mandaba un instante
+  // a la pantalla de "Comprobando permisos...", perdiendo cualquier formulario
+  // que tuvieras abierto en ese momento.
   useEffect(() => {
     const checkAdmin = async () => {
       if (!session?.user) { setIsAdmin(false); return; }
@@ -735,7 +919,7 @@ export default function Admin() {
       setCheckingAdmin(false);
     };
     checkAdmin();
-  }, [session]);
+  }, [session?.user?.id]);
 
   // Carga todos los datos desde Supabase cuando se confirma que es admin
   useEffect(() => {
@@ -761,6 +945,17 @@ export default function Admin() {
 
       const { data: co } = await supabase.from("combinas").select("*").order("created_at");
       setCombinas((co || []).map(c => ({ id: c.id, desc: c.descripcion, validos: c.validos })));
+
+      const { data: pr2 } = await supabase.from("precios_retos").select("*").order("created_at");
+      const { data: prj2 } = await supabase.from("precios_jugadores").select("*").order("orden");
+      setPrecios((pr2 || []).map(r => ({
+        id: r.id,
+        presupuesto: r.presupuesto,
+        jugadores: (prj2 || []).filter(j => j.reto_id === r.id).map(j => ({
+          id: j.id, nombre: j.nombre, foto_url: j.foto_url || "", valor_real: j.valor_real,
+          pista_posicion: j.pista_posicion || "primero", pista_valor: j.pista_valor || "",
+        })),
+      })));
 
       const { data: ja } = await supabase.from("juegos_activos").select("*");
       if (ja) {
@@ -850,6 +1045,7 @@ export default function Admin() {
     { id: "alineaciones", icon: "🏟", label: "Alineaciones",   count: alineaciones.length },
     { id: "jugadores",    icon: "⚽", label: "Jugadores",      count: jugadores.length },
     { id: "combinas",     icon: "🔍", label: "Combina",        count: combinas.length },
+    { id: "precios",      icon: "💰", label: "Precio Justo",   count: precios.length },
     { id: "usuarios",     icon: "👥", label: "Usuarios",       count: null },
   ];
 
@@ -884,6 +1080,7 @@ export default function Admin() {
               { id: "alineacion",icon: "🏟", name: "Adivina la Alineación", maxPts: 200 },
               { id: "jugador",   icon: "⚽", name: "Adivina el Jugador",    maxPts: 300 },
               { id: "combina",   icon: "🔍", name: "Combina",               maxPts: 400 },
+              { id: "precio",    icon: "💰", name: "El Precio Justo",       maxPts: 1000 },
             ].map(j => (
               <div key={j.id} className="card" style={{ display: "flex", alignItems: "center", gap: 16, padding: "18px 22px" }}>
                 <div style={{ fontSize: 32 }}>{j.icon}</div>
@@ -920,6 +1117,7 @@ export default function Admin() {
         {sec === "alineaciones" && <SecAlineaciones data={alineaciones} setData={setAlineaciones} />}
         {sec === "jugadores"    && <SecJugadores    data={jugadores}    setData={setJugadores} />}
         {sec === "combinas"     && <SecCombinas     data={combinas}     setData={setCombinas} />}
+        {sec === "precios"      && <SecPrecios      data={precios}      setData={setPrecios} />}
         {sec === "usuarios"     && <SecUsuarios />}
       </main>
     </div>
