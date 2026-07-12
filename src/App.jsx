@@ -379,6 +379,7 @@ function TestDiario({ onFinish, done, scores, preguntas }) {
   const [showOverlay, setShowOverlay] = useState(false);
   const questions = useRef(preguntas);
   const testStartRef = useRef(null); // Ref para evitar problema de closure con el tiempo
+  const [correctIdx, setCorrectIdx] = useState(null); // Se rellena con la respuesta del servidor, tras contestar
 
   const q = questions.current[idx];
 
@@ -396,15 +397,26 @@ function TestDiario({ onFinish, done, scores, preguntas }) {
     setShowOverlay(true);
   };
 
-  const handleAnswer = (i) => {
+  const handleAnswer = async (i) => {
     if (sel !== null) return;
-    const correct = i === q.ans;
+    setSel(i); // bloquea los botones mientras esperamos la respuesta del servidor
+
+    // La respuesta correcta NO viaja al navegador hasta ahora, ya contestada.
+    // Se comprueba en Supabase, para que no se pueda ver "haciendo trampa".
+    const { data } = await supabase.rpc("comprobar_respuesta_test", {
+      p_pregunta_id: q.id,
+      p_respuesta: i,
+    }).maybeSingle();
+
+    const correct = data?.correcta ?? false;
+    const ansIdx = data?.respuesta_correcta ?? i;
+    setCorrectIdx(ansIdx);
+
     const pts = correct ? q.pts : 0;
-    setSel(i);
     const newBase = baseScore + pts;
     setBaseScore(newBase);
     setRacha(r => correct ? r + 1 : 0);
-    const newAnswers = [...answers, { q: q.q, sel: i, ans: q.ans, opts: q.opts, correct, pts }];
+    const newAnswers = [...answers, { q: q.q, sel: i, ans: ansIdx, opts: q.opts, correct, pts }];
     setAnswers(newAnswers);
     setTimeout(() => {
       if (idx + 1 >= questions.current.length) {
@@ -412,6 +424,7 @@ function TestDiario({ onFinish, done, scores, preguntas }) {
       } else {
         setIdx(i2 => i2 + 1);
         setSel(null);
+        setCorrectIdx(null);
       }
     }, 900);
   };
@@ -519,7 +532,7 @@ function TestDiario({ onFinish, done, scores, preguntas }) {
       <div className="opts">
         {q.opts.map((o, i) => {
           let cls = "opt";
-          if (sel !== null) { if (i === q.ans) cls += " ok"; else if (i === sel) cls += " ko"; }
+          if (sel !== null) { if (i === correctIdx) cls += " ok"; else if (i === sel) cls += " ko"; }
           return (
             <button key={i} className={cls} disabled={sel !== null} onClick={() => handleAnswer(i)}>
               <span className="opt-letra">{["A","B","C","D"][i]}</span> {o}
@@ -1138,7 +1151,32 @@ export default function App() {
   const [authMsg, setAuthMsg] = useState("");
   const [authLoading, setAuthLoading] = useState(false);
   const [checkingSession, setCheckingSession] = useState(true);
-  const [tab, setTab] = useState("inicio");
+  // Mapa entre pestaña y URL. Así la barra de direcciones muestra goalwin.pro/test-diario
+  // en vez de quedarse siempre en goalwin.pro, y el botón "atrás" del navegador
+  // vuelve a la pantalla anterior de la app en vez de salir de la web.
+  const TAB_PATHS = {
+    inicio: "/", test: "/test-diario", alineacion: "/alineacion",
+    jugador: "/jugador-misterio", combina: "/combina", ranking: "/ranking",
+  };
+  const pathToTab = (path) => Object.keys(TAB_PATHS).find(k => TAB_PATHS[k] === path) || "inicio";
+
+  const [tab, setTabState] = useState(() => pathToTab(window.location.pathname));
+  const goTo = (id, replace = false) => {
+    setTabState(id);
+    const path = TAB_PATHS[id] || "/";
+    if (window.location.pathname !== path) {
+      if (replace) window.history.replaceState({ tab: id }, "", path);
+      else window.history.pushState({ tab: id }, "", path);
+    }
+  };
+  useEffect(() => {
+    // Deja la URL inicial bien puesta (por si se entró directo por goalwin.pro/test-diario)
+    window.history.replaceState({ tab }, "", TAB_PATHS[tab] || "/");
+    const onPopState = () => setTabState(pathToTab(window.location.pathname));
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  }, []);
+  const setTab = goTo;
   const [scores, setScores] = useState({ test: 0, alineacion: 0, jugador: 0, combina: 0 });
   const [done, setDone] = useState({ test: false, alineacion: false, jugador: false, combina: false });
 
@@ -1184,7 +1222,7 @@ export default function App() {
       };
 
       // 10 preguntas del día: 4 fácil, 3 medio, 2 difícil, 1 muy difícil
-      const { data: pr } = await supabase.from("preguntas").select("*");
+      const { data: pr } = await supabase.from("preguntas_publicas").select("*");
       if (pr) {
         const porNivel = (n, offset) =>
           sortSeeded(pr.filter(p => p.nivel === n), semilla + offset);
@@ -1194,7 +1232,7 @@ export default function App() {
           ...porNivel("dificil", 3).slice(0, 2),
           ...porNivel("muyDificil", 4).slice(0, 1),
         ].map(p => ({
-          q: p.texto, opts: p.opts, ans: p.ans, nivel: p.nivel,
+          id: p.id, q: p.texto, opts: p.opts, nivel: p.nivel,
           pts: p.nivel === "facil" ? 25 : p.nivel === "medio" ? 50 : p.nivel === "dificil" ? 100 : 150,
         }));
         setPreguntasHoy(elegidas);
