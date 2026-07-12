@@ -355,7 +355,7 @@ function Proximamente({ icon, nombre }) {
         <div className="prox-title">{nombre}</div>
         <div style={{ background: "#0a0a0a", border: "1px solid #2a2a2a", borderRadius: 12, padding: "20px 24px", margin: "16px 0", textAlign: "center" }}>
           <div style={{ fontSize: 32, marginBottom: 10 }}>🔧</div>
-          <div style={{ fontFamily: "'Teko',sans-serif", fontSize: 22, color: "#ffb400", letterSpacing: 1, marginBottom: 8 }}>ESTAMOS PREPARANDO EL JUEGO</div>
+          <div style={{ fontFamily: "'Teko',sans-serif", fontSize: 22, color: "#ffb400", letterSpacing: 1, marginBottom: 8 }}>PRÓXIMAMENTE...</div>
           <div style={{ fontSize: 14, color: "#9a9a9a", lineHeight: 1.7 }}>Estamos trabajando para ofrecerte la mejor experiencia.<br />Vuelve pronto, ¡no te lo pierdas!</div>
         </div>
         <div style={{ fontSize: 12, color: "#7a7a7a", textAlign: "center" }}>
@@ -1064,6 +1064,7 @@ function Ranking({ user, scores }) {
   const [expanded, setExpanded] = useState(null);
   const [usuarios, setUsuarios] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [detalle, setDetalle] = useState({}); // cache: { "userId-tab": [ {fecha, test_pts, ...}, ... ] }
   const hoy = new Date().getDay();
   const diaIdx = hoy === 0 ? 6 : hoy - 1;
 
@@ -1080,19 +1081,34 @@ function Ranking({ user, scores }) {
       setLoading(false);
     };
     load();
+    setExpanded(null); // al cambiar de pestaña, cierra cualquier detalle abierto
   }, [tab]);
-
-  const myTotal = Object.values(scores).reduce((a, b) => a + b, 0);
 
   const allRanking = usuarios.map((u, i) => ({
     pos: i + 1,
+    id: u.id,
     nombre: u.nombre,
     pts: tab === "diario" ? u.puntos_totales : u.puntos_semana,
     me: u.nombre === user.nombre,
-    desglose: tab === "diario"
-      ? { test: scores.test || 0, alineacion: scores.alineacion || 0, jugador: scores.jugador || 0, combina: scores.combina || 0 }
-      : null,
   }));
+
+  const toggleExpand = async (i, userId) => {
+    if (expanded === i) { setExpanded(null); return; }
+    setExpanded(i);
+    const cacheKey = `${userId}-${tab}`;
+    if (!detalle[cacheKey]) {
+      const dias = tab === "diario" ? 1 : 7;
+      const { data } = await supabase.rpc("progreso_diario_de", { p_user_id: userId, p_dias: dias });
+      setDetalle(d => ({ ...d, [cacheKey]: data || [] }));
+    }
+  };
+
+  const DIAS_SEMANA = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
+  const nombreDia = (fechaStr) => {
+    const d = new Date(fechaStr + "T00:00:00");
+    return DIAS_SEMANA[d.getDay() === 0 ? 6 : d.getDay() - 1];
+  };
+  const totalDia = (row) => (row?.test_pts || 0) + (row?.alineacion_pts || 0) + (row?.jugador_pts || 0) + (row?.combina_pts || 0);
 
   return (
     <div className="card">
@@ -1114,29 +1130,48 @@ function Ranking({ user, scores }) {
       ) : allRanking.length === 0 ? (
         <div className="empty">Aún no hay puntuaciones registradas.</div>
       ) : (
-        allRanking.map((r, i) => (
-          <div key={i}>
-            <div className={`rank-row ${r.pos <= 3 ? "top3" : ""} ${r.me ? "me" : ""}`}
-              onClick={() => setExpanded(expanded === i ? null : i)}>
-              <div className={`rank-pos ${r.pos === 1 ? "pos-1" : r.pos === 2 ? "pos-2" : r.pos === 3 ? "pos-3" : ""}`}>
-                {r.pos === 1 ? "🥇" : r.pos === 2 ? "🥈" : r.pos === 3 ? "🥉" : `#${r.pos}`}
+        allRanking.map((r, i) => {
+          const cacheKey = `${r.id}-${tab}`;
+          const filas = detalle[cacheKey];
+          return (
+            <div key={i}>
+              <div className={`rank-row ${r.pos <= 3 ? "top3" : ""} ${r.me ? "me" : ""}`}
+                onClick={() => toggleExpand(i, r.id)}>
+                <div className={`rank-pos ${r.pos === 1 ? "pos-1" : r.pos === 2 ? "pos-2" : r.pos === 3 ? "pos-3" : ""}`}>
+                  {r.pos === 1 ? "🥇" : r.pos === 2 ? "🥈" : r.pos === 3 ? "🥉" : `#${r.pos}`}
+                </div>
+                <div className="rank-name">{r.nombre}{r.me ? " (tú)" : ""}</div>
+                <div style={{ textAlign: "right" }}>
+                  <div className="rank-pts">{r.pts.toLocaleString()}</div>
+                  {tab === "semanal" && r.pos === 1 && <div className="rank-prize">👕 Camiseta</div>}
+                </div>
               </div>
-              <div className="rank-name">{r.nombre}{r.me ? " (tú)" : ""}</div>
-              <div style={{ textAlign: "right" }}>
-                <div className="rank-pts">{r.pts.toLocaleString()}</div>
-                {tab === "semanal" && r.pos === 1 && <div className="rank-prize">👕 Camiseta</div>}
-              </div>
+              {expanded === i && (
+                <div className="desglose">
+                  {!filas ? (
+                    <div style={{ fontSize: 13, color: "#7a7a7a", textAlign: "center", padding: "6px 0" }}>Cargando...</div>
+                  ) : tab === "diario" ? (
+                    <>
+                      <div className="des-row"><span className="des-lbl">✔ Test Diario</span><span className="des-val">{filas[0]?.test_pts || 0} pts</span></div>
+                      <div className="des-row"><span className="des-lbl">🏟 Alineación</span><span className="des-val">{filas[0]?.alineacion_pts || 0} pts</span></div>
+                      <div className="des-row"><span className="des-lbl">⚽ Jugador</span><span className="des-val">{filas[0]?.jugador_pts || 0} pts</span></div>
+                      <div className="des-row"><span className="des-lbl">🔍 Combina</span><span className="des-val">{filas[0]?.combina_pts || 0} pts</span></div>
+                    </>
+                  ) : filas.length === 0 ? (
+                    <div style={{ fontSize: 13, color: "#7a7a7a", textAlign: "center", padding: "6px 0" }}>Sin puntos esta semana todavía.</div>
+                  ) : (
+                    filas.map(f => (
+                      <div className="des-row" key={f.fecha}>
+                        <span className="des-lbl">{nombreDia(f.fecha)}</span>
+                        <span className="des-val">{totalDia(f)} pts</span>
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
             </div>
-            {expanded === i && tab === "diario" && (
-              <div className="desglose">
-                <div className="des-row"><span className="des-lbl">✔ Test Diario</span><span className="des-val">{r.desglose?.test || 0} pts</span></div>
-                <div className="des-row"><span className="des-lbl">🏟 Alineación</span><span className="des-val">{r.desglose?.alineacion || 0} pts</span></div>
-                <div className="des-row"><span className="des-lbl">⚽ Jugador</span><span className="des-val">{r.desglose?.jugador || 0} pts</span></div>
-                <div className="des-row"><span className="des-lbl">🔍 Combina</span><span className="des-val">{r.desglose?.combina || 0} pts</span></div>
-              </div>
-            )}
-          </div>
-        ))
+          );
+        })
       )}
     </div>
   );

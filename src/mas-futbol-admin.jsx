@@ -712,7 +712,13 @@ export default function Admin() {
       setCheckingSession(false);
     });
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
+      // Al volver a una pestaña que estuvo un rato en segundo plano, Supabase a veces
+      // dispara este evento con una sesión momentáneamente vacía mientras refresca el
+      // token. Si lo aplicáramos tal cual, se vería como si te hubiera echado del panel
+      // (perdiendo lo que estuvieras escribiendo). Por eso solo "cerramos sesión" de
+      // verdad ante un SIGNED_OUT explícito; cualquier otro evento con sesión vacía se ignora.
+      if (session) { setSession(session); return; }
+      if (_event === "SIGNED_OUT") setSession(null);
     });
     return () => listener.subscription.unsubscribe();
   }, []);
@@ -843,7 +849,7 @@ export default function Admin() {
     { id: "preguntas",    icon: "✔",  label: "Test Diario",    count: preguntas.length },
     { id: "alineaciones", icon: "🏟", label: "Alineaciones",   count: alineaciones.length },
     { id: "jugadores",    icon: "⚽", label: "Jugadores",      count: jugadores.length },
-    { id: "combinas",     icon: "🔍", label: "Combinas",       count: combinas.length },
+    { id: "combinas",     icon: "🔍", label: "Combina",        count: combinas.length },
     { id: "usuarios",     icon: "👥", label: "Usuarios",       count: null },
   ];
 
