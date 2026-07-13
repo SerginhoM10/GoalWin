@@ -842,6 +842,161 @@ function SecPrecios({ data, setData }) {
   );
 }
 
+// ─── ORDENA ───────────────────────────────────────────────────────────────────
+function SecOrden({ data, setData }) {
+  const [view, setView] = useState("lista");
+  const [editing, setEditing] = useState(null);
+  const [alert, setAlert] = useState(null);
+  const emptyJug = { nombre: "", foto_url: "", valor_real: "" };
+  const emptyForm = { criterio: "", unidad: "", jugadores: [{ ...emptyJug }, { ...emptyJug }, { ...emptyJug }] };
+  const [form, setForm] = useState(emptyForm);
+
+  const showAlert = (msg, type = "ok") => { setAlert({ msg, type }); setTimeout(() => setAlert(null), 3500); };
+
+  const openNew = () => { setForm(emptyForm); setEditing(null); setView("nueva"); };
+  const openEdit = (r) => { setForm({ criterio: r.criterio, unidad: r.unidad || "", jugadores: r.jugadores.map(j => ({ ...j })) }); setEditing(r.id); setView("nueva"); };
+
+  const setJug = (i, field, val) => {
+    setForm(f => ({ ...f, jugadores: f.jugadores.map((j, idx) => idx === i ? { ...j, [field]: val } : j) }));
+  };
+  const addJugador = () => {
+    if (form.jugadores.length >= 10) return;
+    setForm(f => ({ ...f, jugadores: [...f.jugadores, { ...emptyJug }] }));
+  };
+  const removeJugador = (i) => {
+    if (form.jugadores.length <= 2) return;
+    setForm(f => ({ ...f, jugadores: f.jugadores.filter((_, idx) => idx !== i) }));
+  };
+
+  const valores = form.jugadores.map(j => j.valor_real).filter(v => v !== "");
+  const hayDuplicados = new Set(valores).size !== valores.length;
+
+  const save = async () => {
+    if (!form.criterio || form.jugadores.some(j => !j.nombre || j.valor_real === "")) {
+      showAlert("Completa el criterio y el valor real de todos los jugadores.", "ko"); return;
+    }
+    if (hayDuplicados) {
+      showAlert("Hay dos jugadores con el mismo valor real. El orden correcto quedaría ambiguo, así que no se puede guardar. Cambia alguno de los valores.", "ko");
+      return;
+    }
+
+    let retoId = editing;
+    if (editing) {
+      const { error } = await supabase.from("orden_retos").update({ criterio: form.criterio, unidad: form.unidad || null }).eq("id", editing);
+      if (error) { showAlert("Error: " + error.message, "ko"); return; }
+      await supabase.from("orden_jugadores").delete().eq("reto_id", editing);
+    } else {
+      const { data: inserted, error } = await supabase.from("orden_retos").insert({ criterio: form.criterio, unidad: form.unidad || null }).select().single();
+      if (error) { showAlert("Error: " + error.message, "ko"); return; }
+      retoId = inserted.id;
+    }
+
+    const jugadoresPayload = form.jugadores.map(j => ({
+      reto_id: retoId, nombre: j.nombre, foto_url: j.foto_url || null, valor_real: parseInt(j.valor_real),
+    }));
+    const { error: errJ } = await supabase.from("orden_jugadores").insert(jugadoresPayload);
+    if (errJ) { showAlert("Error al guardar jugadores: " + errJ.message, "ko"); return; }
+
+    const nuevoReto = { id: retoId, criterio: form.criterio, unidad: form.unidad, jugadores: form.jugadores };
+    if (editing) setData(d => d.map(r => r.id === editing ? nuevoReto : r));
+    else setData(d => [...d, nuevoReto]);
+    showAlert(editing ? "Reto actualizado." : "Reto añadido.");
+    setView("lista");
+  };
+
+  const del = async (id) => {
+    if (!confirm("¿Eliminar?")) return;
+    await supabase.from("orden_jugadores").delete().eq("reto_id", id);
+    const { error } = await supabase.from("orden_retos").delete().eq("id", id);
+    if (error) { showAlert("Error: " + error.message, "ko"); return; }
+    setData(d => d.filter(r => r.id !== id));
+  };
+
+  return (
+    <div>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+        <div>
+          <div className="page-title">🔀 ORDENA</div>
+          <div className="page-sub">Banco de retos · {data.length} retos en total</div>
+        </div>
+        {view === "lista" && <button className="btn-add" onClick={openNew}>+ NUEVO RETO</button>}
+      </div>
+      {alert && <div className={`alert alert-${alert.type}`}>{alert.msg}</div>}
+
+      {view === "lista" && (
+        <div className="card">
+          {data.length === 0 ? <div className="empty">No hay retos aún.</div> : (
+            <table className="tbl">
+              <thead><tr><th>Criterio</th><th>Jugadores (de menor a mayor)</th><th></th></tr></thead>
+              <tbody>
+                {data.map(r => (
+                  <tr key={r.id}>
+                    <td><strong>{r.criterio}</strong>{r.unidad && <span style={{ color: "#6b8f71" }}> ({r.unidad})</span>}</td>
+                    <td style={{ color: "#6b8f71" }}>
+                      {[...r.jugadores].sort((a, b) => a.valor_real - b.valor_real).map(j => `${j.nombre} (${j.valor_real})`).join(" → ")}
+                    </td>
+                    <td><div style={{ display: "flex", gap: 6 }}>
+                      <button className="btn-edit" onClick={() => openEdit(r)}>Editar</button>
+                      <button className="btn-del" onClick={() => del(r.id)}>Eliminar</button>
+                    </div></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      )}
+
+      {view === "nueva" && (
+        <div className="card">
+          <div className="card-title">{editing ? "EDITAR RETO" : "NUEVO RETO"}</div>
+          <hr className="divider" />
+          <div className="form-grid">
+            <div className="inp-group">
+              <label className="lbl">Criterio de orden</label>
+              <input className="inp" placeholder="Edad / Valor de mercado / Goles..." value={form.criterio}
+                onChange={e => setForm(f => ({ ...f, criterio: e.target.value }))} />
+            </div>
+            <div className="inp-group">
+              <label className="lbl">Unidad (opcional, solo para mostrar)</label>
+              <input className="inp" placeholder="años / M€ / goles..." value={form.unidad}
+                onChange={e => setForm(f => ({ ...f, unidad: e.target.value }))} />
+            </div>
+          </div>
+          <hr className="divider" />
+          <div className="lbl" style={{ marginBottom: 12 }}>
+            JUGADORES ({form.jugadores.length}/10, mínimo 2) — no puede haber dos con el mismo valor real
+          </div>
+          {hayDuplicados && <div className="alert alert-ko">⚠ Hay valores repetidos, el orden quedaría ambiguo.</div>}
+          {form.jugadores.map((j, i) => (
+            <div key={i} style={{ background: "#0a0a0f", border: "1px solid #1e3d25", borderRadius: 8, padding: 12, marginBottom: 10 }}>
+              <div style={{ display: "flex", gap: 8, marginBottom: 8, alignItems: "center", flexWrap: "wrap" }}>
+                <span style={{ fontFamily: "'Bebas Neue',sans-serif", color: "#6b8f71", minWidth: 20 }}>{i + 1}</span>
+                <input className="inp" placeholder="Nombre del jugador" value={j.nombre} style={{ flex: 1, minWidth: 140 }}
+                  onChange={e => setJug(i, "nombre", e.target.value)} />
+                <input className="inp" type="number" placeholder="Valor real" value={j.valor_real} style={{ width: 130 }}
+                  onChange={e => setJug(i, "valor_real", e.target.value)} />
+                {form.jugadores.length > 2 && (
+                  <button className="btn-del" onClick={() => removeJugador(i)}>Quitar</button>
+                )}
+              </div>
+              <input className="inp" placeholder="URL de la foto del jugador (opcional)" value={j.foto_url}
+                onChange={e => setJug(i, "foto_url", e.target.value)} />
+            </div>
+          ))}
+          {form.jugadores.length < 10 && (
+            <button className="btn-ghost" style={{ marginBottom: 16 }} onClick={addJugador}>+ Añadir jugador</button>
+          )}
+          <div className="btn-row">
+            <button className="btn-ghost" onClick={() => setView("lista")}>Cancelar</button>
+            <button className="btn-add" onClick={save}>{editing ? "GUARDAR CAMBIOS" : "AÑADIR RETO"}</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── ROOT ─────────────────────────────────────────────────────────────────────
 export default function Admin() {
   const [checkingSession, setCheckingSession] = useState(true);
@@ -862,6 +1017,7 @@ export default function Admin() {
   const [jugadores, setJugadores] = useState([]);
   const [combinas, setCombinas] = useState([]);
   const [precios, setPrecios] = useState([]);
+  const [ordenes, setOrdenes] = useState([]);
 
   // Comprueba si ya hay sesión activa (por ejemplo, al refrescar la página)
   useEffect(() => {
@@ -936,6 +1092,17 @@ export default function Admin() {
         jugadores: (prj2 || []).filter(j => j.reto_id === r.id).map(j => ({
           id: j.id, nombre: j.nombre, foto_url: j.foto_url || "", valor_real: j.valor_real,
           pista_valor: j.pista_valor || "",
+        })),
+      })));
+
+      const { data: or2 } = await supabase.from("orden_retos").select("*").order("created_at");
+      const { data: orj2 } = await supabase.from("orden_jugadores").select("*");
+      setOrdenes((or2 || []).map(r => ({
+        id: r.id,
+        criterio: r.criterio,
+        unidad: r.unidad || "",
+        jugadores: (orj2 || []).filter(j => j.reto_id === r.id).map(j => ({
+          id: j.id, nombre: j.nombre, foto_url: j.foto_url || "", valor_real: j.valor_real,
         })),
       })));
 
@@ -1028,6 +1195,7 @@ export default function Admin() {
     { id: "jugadores",    icon: "⚽", label: "Jugadores",      count: jugadores.length },
     { id: "combinas",     icon: "🔍", label: "Combina",        count: combinas.length },
     { id: "precios",      icon: "💰", label: "Precio Justo",   count: precios.length },
+    { id: "orden",        icon: "🔀", label: "Ordena",         count: ordenes.length },
     { id: "usuarios",     icon: "👥", label: "Usuarios",       count: null },
   ];
 
@@ -1063,6 +1231,7 @@ export default function Admin() {
               { id: "jugador",   icon: "⚽", name: "Adivina el Jugador",    maxPts: 300 },
               { id: "combina",   icon: "🔍", name: "Combina",               maxPts: 400 },
               { id: "precio",    icon: "💰", name: "El Precio Justo",       maxPts: 1000 },
+              { id: "orden",     icon: "🔀", name: "Ordena",                maxPts: 300 },
             ].map(j => (
               <div key={j.id} className="card" style={{ display: "flex", alignItems: "center", gap: 16, padding: "18px 22px" }}>
                 <div style={{ fontSize: 32 }}>{j.icon}</div>
@@ -1100,6 +1269,7 @@ export default function Admin() {
         {sec === "jugadores"    && <SecJugadores    data={jugadores}    setData={setJugadores} />}
         {sec === "combinas"     && <SecCombinas     data={combinas}     setData={setCombinas} />}
         {sec === "precios"      && <SecPrecios      data={precios}      setData={setPrecios} />}
+        {sec === "orden"        && <SecOrden        data={ordenes}      setData={setOrdenes} />}
         {sec === "usuarios"     && <SecUsuarios />}
       </main>
     </div>
