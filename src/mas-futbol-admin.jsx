@@ -685,26 +685,12 @@ function SecUsuarios() {
   );
 }
 
-function calcularDigito(valorReal, posicion) {
-  const str = String(parseInt(valorReal) || 0);
-  const idx = { primero: 0, segundo: 1, tercero: 2, cuarto: 3, quinto: 4, ultimo: str.length - 1 }[posicion];
-  return str[idx] ?? "";
-}
-const POSICIONES_PISTA = [
-  { id: "primero", label: "Primer dígito" },
-  { id: "segundo", label: "Segundo dígito" },
-  { id: "tercero", label: "Tercer dígito" },
-  { id: "cuarto",  label: "Cuarto dígito" },
-  { id: "quinto",  label: "Quinto dígito" },
-  { id: "ultimo",  label: "Último dígito" },
-];
-
 // ─── PRECIO JUSTO ─────────────────────────────────────────────────────────────
 function SecPrecios({ data, setData }) {
   const [view, setView] = useState("lista");
   const [editing, setEditing] = useState(null);
   const [alert, setAlert] = useState(null);
-  const emptyJug = { nombre: "", foto_url: "", valor_real: "", pista_posicion: "primero" };
+  const emptyJug = { nombre: "", foto_url: "", valor_real: "", pista_valor: "" };
   const emptyForm = { presupuesto: "", jugadores: [{ ...emptyJug }, { ...emptyJug }, { ...emptyJug }, { ...emptyJug }] };
   const [form, setForm] = useState(emptyForm);
 
@@ -749,8 +735,8 @@ function SecPrecios({ data, setData }) {
 
     const jugadoresPayload = form.jugadores.map((j, i) => ({
       reto_id: retoId, nombre: j.nombre, foto_url: j.foto_url || null,
-      valor_real: parseInt(j.valor_real), pista_posicion: j.pista_posicion,
-      pista_valor: (j.pista_valor ?? "").toString().trim() || calcularDigito(j.valor_real, j.pista_posicion),
+      valor_real: parseInt(j.valor_real),
+      pista_valor: (j.pista_valor || "").toString().trim() || null,
       orden: i,
     }));
     const { error: errJ } = await supabase.from("precios_jugadores").insert(jugadoresPayload);
@@ -833,12 +819,8 @@ function SecPrecios({ data, setData }) {
                   onChange={e => setJug(i, "nombre", e.target.value)} />
                 <input className="inp" type="number" placeholder="Valor real (M)" value={j.valor_real} style={{ width: 130 }}
                   onChange={e => setJug(i, "valor_real", e.target.value)} />
-                <select className="sel" value={j.pista_posicion} style={{ width: 160 }}
-                  onChange={e => setJug(i, "pista_posicion", e.target.value)}>
-                  {POSICIONES_PISTA.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}
-                </select>
-                <input className="inp" placeholder="Valor de la pista" value={j.pista_valor ?? (j.valor_real ? calcularDigito(j.valor_real, j.pista_posicion) : "")}
-                  style={{ width: 110 }} onChange={e => setJug(i, "pista_valor", e.target.value)} />
+                <input className="inp" placeholder="Pista para este jugador (la escribes tú)" value={j.pista_valor || ""}
+                  style={{ flex: 1, minWidth: 200 }} onChange={e => setJug(i, "pista_valor", e.target.value)} />
                 {form.jugadores.length > 3 && (
                   <button className="btn-del" onClick={() => removeJugador(i)}>Quitar</button>
                 )}
@@ -953,7 +935,7 @@ export default function Admin() {
         presupuesto: r.presupuesto,
         jugadores: (prj2 || []).filter(j => j.reto_id === r.id).map(j => ({
           id: j.id, nombre: j.nombre, foto_url: j.foto_url || "", valor_real: j.valor_real,
-          pista_posicion: j.pista_posicion || "primero", pista_valor: j.pista_valor || "",
+          pista_valor: j.pista_valor || "",
         })),
       })));
 
