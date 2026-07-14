@@ -714,7 +714,11 @@ function AdivinaAlineacion({ onFinish, done, scores, partido: ALINEACION }) {
               const isFound = found.find(f => f.nombre === j.nombre);
               return (
                 <div key={ji} className="camp-player">
-                  <div className={`camp-circle ${isFound ? "found" : ""}`}>{isFound ? "⚽" : "👤"}</div>
+                  <div className={`camp-circle ${isFound ? "found" : ""}`}>
+                    {isFound
+                      ? (j.foto_url ? <img src={j.foto_url} alt={j.nombre} style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "50%" }} /> : "⚽")
+                      : "👤"}
+                  </div>
                   <div className={`camp-name ${isFound ? "found" : ""}`}>{isFound ? j.nombre : j.pos}</div>
                 </div>
               );
@@ -1182,24 +1186,40 @@ function PrecioJusto({ onFinish, done, scores, reto: RETO }) {
 // ─── ORDENA ───────────────────────────────────────────────────────────────────
 function Ordena({ onFinish, done, scores, reto: RETO }) {
   const [phase, setPhase] = useState("intro");
+  const [rondaIdx, setRondaIdx] = useState(0);
   const [orden, setOrden] = useState([]);
   const [dragIdx, setDragIdx] = useState(null);
-  const [dragY, setDragY] = useState(0);
+  const [dragX, setDragX] = useState(0);
   const itemRefs = useRef([]);
   const containerRef = useRef(null);
   const dragInfo = useRef(null);
 
+  const [totalPts, setTotalPts] = useState(0);
+  const [resultadosRondas, setResultadosRondas] = useState([]);
+  const [rondaResultado, setRondaResultado] = useState(null);
+  const [showRondaResult, setShowRondaResult] = useState(false);
   const [finished, setFinished] = useState(false);
   const [showOverlay, setShowOverlay] = useState(false);
-  const [resultado, setResultado] = useState([]);
-  const [finalPts, setFinalPts] = useState(0);
   const [enviando, setEnviando] = useState(false);
 
-  useEffect(() => {
-    if (RETO?.jugadores) setOrden(RETO.jugadores);
-  }, [RETO]);
+  const criterios = RETO?.criterios || [];
+  const jugadoresBase = RETO?.jugadores || [];
+  const criterioActual = criterios[rondaIdx];
 
-  if (!RETO || !RETO.jugadores || RETO.jugadores.length === 0) return (
+  useEffect(() => {
+    if (jugadoresBase.length) {
+      // Baraja el orden inicial de cada ronda (solo afecta al punto de partida, no a la puntuación)
+      const copia = [...jugadoresBase];
+      for (let i = copia.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copia[i], copia[j]] = [copia[j], copia[i]];
+      }
+      setOrden(copia);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rondaIdx, RETO]);
+
+  if (!RETO || jugadoresBase.length === 0 || criterios.length === 0) return (
     <div className="card">
       <div className="card-title">🔀 ORDENA</div>
       <div className="alert alert-inf">Todavía no hay ningún reto configurado para hoy.</div>
@@ -1215,32 +1235,32 @@ function Ordena({ onFinish, done, scores, reto: RETO }) {
 
   if (phase === "intro") return (
     <IntroModal icon="🔀" title="ORDENA"
-      text={`Ordena a los jugadores de menor a mayor según: ${RETO.criterio}. Arriba = el valor más bajo, abajo = el más alto. Arrastra las tarjetas para colocarlas donde creas.`}
+      text={`Los mismos ${jugadoresBase.length} jugadores se ordenan de ${criterios.length} formas distintas. En cada ronda, arrastra las tarjetas: el valor más ALTO va a la IZQUIERDA (verde), el más BAJO a la DERECHA (rojo). Primera ronda: ${criterios[0]?.criterio}.`}
       onStart={() => setPhase("playing")} />
   );
 
   const onPointerDown = (e, idx) => {
-    if (finished || !itemRefs.current[idx]) return;
+    if (!itemRefs.current[idx]) return;
     const rect = itemRefs.current[idx].getBoundingClientRect();
-    dragInfo.current = { startY: e.clientY, offsetInItem: e.clientY - rect.top };
+    dragInfo.current = { startX: e.clientX, offsetInItem: e.clientX - rect.left };
     setDragIdx(idx);
     try { e.target.setPointerCapture(e.pointerId); } catch (err) {}
   };
 
   const onPointerMove = (e) => {
     if (dragIdx === null || !dragInfo.current || !containerRef.current) return;
-    const deltaY = e.clientY - dragInfo.current.startY;
-    setDragY(deltaY);
+    const deltaX = e.clientX - dragInfo.current.startX;
+    setDragX(deltaX);
 
     const containerRect = containerRef.current.getBoundingClientRect();
-    const pointerYInContainer = e.clientY - containerRect.top;
+    const pointerXInContainer = e.clientX - containerRect.left + containerRef.current.scrollLeft;
     let newIndex = dragIdx;
     for (let i = 0; i < orden.length; i++) {
       const el = itemRefs.current[i];
       if (!el) continue;
       const r = el.getBoundingClientRect();
-      const mid = r.top + r.height / 2 - containerRect.top;
-      if (pointerYInContainer > mid) newIndex = i;
+      const mid = r.left + r.width / 2 - containerRect.left + containerRef.current.scrollLeft;
+      if (pointerXInContainer > mid) newIndex = i;
     }
     if (newIndex !== dragIdx) {
       setOrden(o => {
@@ -1249,92 +1269,131 @@ function Ordena({ onFinish, done, scores, reto: RETO }) {
         copy.splice(newIndex, 0, moved);
         return copy;
       });
-      dragInfo.current.startY = e.clientY;
+      dragInfo.current.startX = e.clientX;
       setDragIdx(newIndex);
-      setDragY(0);
+      setDragX(0);
     }
   };
 
-  const onPointerUp = () => { setDragIdx(null); setDragY(0); dragInfo.current = null; };
+  const onPointerUp = () => { setDragIdx(null); setDragX(0); dragInfo.current = null; };
 
-  const enviar = async () => {
+  const enviarRonda = async () => {
     if (enviando) return;
     setEnviando(true);
     const p_orden_usuario = orden.map(j => j.id);
-    const { data } = await supabase.rpc("orden_comprobar", { p_reto_id: RETO.id, p_orden_usuario });
+    const { data } = await supabase.rpc("orden_comprobar", { p_criterio_id: criterioActual.id, p_orden_usuario });
     const filas = data || [];
     const pts = filas.reduce((s, f) => s + (f.pts || 0), 0);
-    setResultado(filas);
-    setFinalPts(pts);
-    setFinished(true);
-    setShowOverlay(true);
+    setResultadosRondas(r => [...r, { criterio: criterioActual.criterio, unidad: criterioActual.unidad, filas, pts }]);
+    setTotalPts(t => t + pts);
+    setRondaResultado({ criterio: criterioActual.criterio, unidad: criterioActual.unidad, filas, pts });
+    setShowRondaResult(true);
     setEnviando(false);
   };
 
+  const siguienteRonda = () => {
+    setShowRondaResult(false);
+    if (rondaIdx + 1 < criterios.length) {
+      setRondaIdx(i => i + 1);
+    } else {
+      setFinished(true);
+      setShowOverlay(true);
+    }
+  };
+
   if (showOverlay) return (
-    <FinishOverlay icon="🔀" juego="Ordena" pts={finalPts} scores={scores}
-      onContinue={() => { setShowOverlay(false); onFinish && onFinish(finalPts); }} />
+    <FinishOverlay icon="🔀" juego="Ordena" pts={totalPts} scores={scores}
+      onContinue={() => { setShowOverlay(false); onFinish && onFinish(totalPts); }} />
   );
 
   if (finished) return (
     <div className="card">
       <div className="card-title">🔀 ORDENA</div>
-      <div className="result-pts-big">{finalPts}</div>
-      <div className="result-sub">puntos conseguidos · {RETO.criterio}</div>
-      <div className="answer-review">
-        {resultado.map(f => (
+      <div className="result-pts-big">{totalPts}</div>
+      <div className="result-sub">puntos totales · {criterios.length} rondas</div>
+      {resultadosRondas.map((r, ri) => (
+        <div key={ri} style={{ marginBottom: 14 }}>
+          <div className="lbl" style={{ marginBottom: 6 }}>{r.criterio} — {r.pts} pts</div>
+          <div className="answer-review">
+            {r.filas.map(f => (
+              <div key={f.posicion} className={`ar ${f.correcto ? "ar-ok" : "ar-ko"}`}>
+                <span>{f.correcto ? "✔" : "❌"}</span>
+                <span>
+                  <strong>#{f.posicion}</strong> pusiste a <strong>{f.nombre}</strong> ({f.valor_real}{r.unidad ? ` ${r.unidad}` : ""})
+                  {!f.correcto && <> · iba <strong>{f.correcto_nombre}</strong> ({f.correcto_valor}{r.unidad ? ` ${r.unidad}` : ""})</>}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
+  if (showRondaResult) return (
+    <div className="card">
+      <div className="card-title">🔀 RONDA {rondaIdx + 1}/{criterios.length}</div>
+      <div className="card-sub">{rondaResultado.criterio}</div>
+      <div className="result-pts-big" style={{ fontSize: 44 }}>{rondaResultado.pts} pts</div>
+      <div className="answer-review" style={{ margin: "16px 0" }}>
+        {rondaResultado.filas.map(f => (
           <div key={f.posicion} className={`ar ${f.correcto ? "ar-ok" : "ar-ko"}`}>
             <span>{f.correcto ? "✔" : "❌"}</span>
             <span>
-              <strong>#{f.posicion}</strong> pusiste a <strong>{f.nombre}</strong> ({f.valor_real}{RETO.unidad ? ` ${RETO.unidad}` : ""})
-              {!f.correcto && <> · iba <strong>{f.correcto_nombre}</strong> ({f.correcto_valor}{RETO.unidad ? ` ${RETO.unidad}` : ""})</>}
-              {" · "}{f.pts} pts
+              <strong>#{f.posicion}</strong> pusiste a <strong>{f.nombre}</strong> ({f.valor_real}{rondaResultado.unidad ? ` ${rondaResultado.unidad}` : ""})
+              {!f.correcto && <> · iba <strong>{f.correcto_nombre}</strong> ({f.correcto_valor}{rondaResultado.unidad ? ` ${rondaResultado.unidad}` : ""})</>}
             </span>
           </div>
         ))}
       </div>
+      <button className="btn-main" onClick={siguienteRonda}>
+        {rondaIdx + 1 < criterios.length ? "SIGUIENTE RONDA" : "VER RESULTADO FINAL"}
+      </button>
     </div>
   );
 
   return (
     <div className="card">
-      <div className="card-title">🔀 ORDENA</div>
-      <div className="card-sub">De menor a mayor · {RETO.criterio}</div>
+      <div className="card-title">🔀 ORDENA — Ronda {rondaIdx + 1}/{criterios.length}</div>
+      <div className="card-sub">{criterioActual.criterio} · de mayor (izquierda) a menor (derecha)</div>
+
+      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, marginBottom: 8, textTransform: "uppercase", letterSpacing: 1, fontWeight: 700 }}>
+        <span style={{ color: "#3ddc72" }}>⬅ Mayor</span><span style={{ color: "#ff3b3b" }}>Menor ➡</span>
+      </div>
 
       <div ref={containerRef} style={{
-        position: "relative", borderRadius: 10, padding: 10,
-        background: "linear-gradient(180deg, #ffb40022 0%, #00000000 15%, #00000000 85%, #ff3b3b22 100%)",
+        position: "relative", borderRadius: 10, padding: 10, overflowX: "auto",
+        display: "flex", gap: 10,
+        background: "linear-gradient(90deg, #3ddc7233 0%, #00000000 20%, #00000000 80%, #ff3b3b33 100%)",
         border: "1px solid #2a2a2a",
       }} onPointerMove={onPointerMove} onPointerUp={onPointerUp} onPointerCancel={onPointerUp}>
-        <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: "#7a7a7a", marginBottom: 8, textTransform: "uppercase", letterSpacing: 1 }}>
-          <span>⬆ Menor</span><span>Mayor ⬇</span>
-        </div>
         {orden.map((j, i) => (
           <div key={j.id} ref={el => itemRefs.current[i] = el}
             onPointerDown={(e) => onPointerDown(e, i)}
             style={{
-              display: "flex", alignItems: "center", gap: 12, background: "#0a0a0a",
-              border: "1px solid #2a2a2a", borderRadius: 8, padding: 10, marginBottom: 8,
+              display: "flex", flexDirection: "column", alignItems: "center", gap: 6,
+              background: "#0a0a0a", border: "1px solid #2a2a2a", borderRadius: 8, padding: "12px 10px",
+              minWidth: 96, flexShrink: 0,
               touchAction: "none", cursor: "grab", userSelect: "none",
-              transform: dragIdx === i ? `translateY(${dragY}px) scale(1.02)` : "none",
+              transform: dragIdx === i ? `translateX(${dragX}px) scale(1.04)` : "none",
               zIndex: dragIdx === i ? 10 : 1,
               boxShadow: dragIdx === i ? "0 8px 20px #000000aa" : "none",
               transition: dragIdx === i ? "none" : "transform 0.15s",
             }}>
-            <span style={{ fontFamily: "'Teko',sans-serif", fontSize: 20, color: "#7a7a7a", width: 22 }}>{i + 1}</span>
+            <span style={{ fontFamily: "'Teko',sans-serif", fontSize: 18, color: "#7a7a7a" }}>{i + 1}</span>
             {j.foto_url ? (
-              <img src={j.foto_url} alt={j.nombre} style={{ width: 42, height: 42, borderRadius: "50%", objectFit: "cover" }} />
+              <img src={j.foto_url} alt={j.nombre} style={{ width: 52, height: 52, borderRadius: "50%", objectFit: "cover" }} />
             ) : (
-              <div style={{ width: 42, height: 42, borderRadius: "50%", background: "#111111", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>⚽</div>
+              <div style={{ width: 52, height: 52, borderRadius: "50%", background: "#111111", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22 }}>⚽</div>
             )}
-            <div style={{ fontFamily: "'Teko',sans-serif", fontWeight: 700, fontSize: 18, color: "#f2f2f2", flex: 1 }}>{j.nombre}</div>
-            <span style={{ fontSize: 18, color: "#7a7a7a" }}>⠿</span>
+            <div style={{ fontFamily: "'Teko',sans-serif", fontWeight: 700, fontSize: 15, color: "#f2f2f2", textAlign: "center", lineHeight: 1.1 }}>{j.nombre}</div>
+            <span style={{ fontSize: 16, color: "#7a7a7a" }}>⠿</span>
           </div>
         ))}
       </div>
 
-      <button className="btn-main" style={{ marginTop: 16 }} disabled={enviando} onClick={enviar}>
-        {enviando ? "ENVIANDO..." : "ENVIAR ORDEN"}
+      <button className="btn-main" style={{ marginTop: 16 }} disabled={enviando} onClick={enviarRonda}>
+        {enviando ? "ENVIANDO..." : `ENVIAR RONDA ${rondaIdx + 1}`}
       </button>
     </div>
   );
@@ -1610,19 +1669,18 @@ export default function App() {
         setPrecioHoy({ id: reto.id, presupuesto: reto.presupuesto, jugadores: jugs || [] });
       }
 
-      // Ordena del día (el valor real de cada jugador tampoco viaja aquí,
-      // solo se revela al enviar la solución)
+      // Ordena del día (el valor real de cada jugador no viaja aquí,
+      // solo se revela ronda a ronda al enviar la solución)
       const { data: or2 } = await supabase.from("orden_retos").select("*");
       if (or2 && or2.length > 0) {
         const rand = seededRand(semilla + 50);
         const idx = Math.floor(rand() * or2.length);
         const reto = or2[idx];
-        const { data: jugs } = await supabase
-          .from("orden_jugadores_publicos")
-          .select("*")
-          .eq("reto_id", reto.id);
-        const barajados = sortSeeded(jugs || [], semilla + 51);
-        setOrdenHoy({ id: reto.id, criterio: reto.criterio, unidad: reto.unidad, jugadores: barajados });
+        const [{ data: jugs }, { data: crits }] = await Promise.all([
+          supabase.from("orden_jugadores_publicos").select("*").eq("reto_id", reto.id),
+          supabase.from("orden_criterios").select("*").eq("reto_id", reto.id).order("orden"),
+        ]);
+        setOrdenHoy({ id: reto.id, jugadores: jugs || [], criterios: crits || [] });
       }
 
       setLoadingContent(false);
