@@ -1803,6 +1803,10 @@ export default function App() {
       });
       setAuthLoading(false);
       if (error) { setAuthErr(error.message); return; }
+      // Correo de bienvenida (si falla, no impide que el registro funcione)
+      supabase.functions.invoke("send-email", {
+        body: { type: "welcome", to: authForm.email, nombre: authForm.nombre },
+      }).catch(() => {});
       setAuthMsg("¡Cuenta creada! Revisa tu email para confirmar tu cuenta antes de iniciar sesión.");
       setAuthMode("login");
     } else {
