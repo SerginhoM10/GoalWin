@@ -123,7 +123,8 @@ body { background: #000000; color: #f2f2f2; font-family: 'Inter', sans-serif; mi
 .opts { display: flex; flex-direction: column; gap: 9px; }
 .opt { background: #000000; border: 1.5px solid #2a2a2a; border-radius: 8px; padding: 13px 16px; color: #c8c8c8; font-size: 14px; cursor: pointer; text-align: left; font-family: 'Inter', sans-serif; transition: all 0.12s; display: flex; align-items: center; gap: 12px; }
 .opt:hover:not(:disabled) { border-color: #ffb400; color: #f2f2f2; }
-.opt.ok { background: #ffb40015; border-color: #ffb400; color: #ffb400; }
+.opt.ok { background: #2ecc7118; border-color: #2ecc71; color: #2ecc71; }
+.opt.pending { border-color: #ffb400; color: #ffb400; }
 .opt.ko { background: #ff3b3b15; border-color: #ff3b3b; color: #ff3b3b; }
 .opt:disabled { cursor: default; }
 .opt-letra { font-family: 'Teko', sans-serif; font-weight: 700; font-size: 14px; color: #7a7a7a; min-width: 18px; }
@@ -532,7 +533,8 @@ function TestDiario({ onFinish, done, scores, preguntas }) {
       <div className="opts">
         {q.opts.map((o, i) => {
           let cls = "opt";
-          if (sel !== null) { if (i === correctIdx) cls += " ok"; else if (i === sel) cls += " ko"; }
+          if (sel !== null && correctIdx !== null) { if (i === correctIdx) cls += " ok"; else if (i === sel) cls += " ko"; }
+          else if (sel !== null && i === sel) cls += " pending";
           return (
             <button key={i} className={cls} disabled={sel !== null} onClick={() => handleAnswer(i)}>
               <span className="opt-letra">{["A","B","C","D"][i]}</span> {o}
