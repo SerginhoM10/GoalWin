@@ -292,7 +292,7 @@ function Countdown({ onDone }) {
 }
 
 // ─── FINISH OVERLAY ──────────────────────────────────────────────────────────
-function FinishOverlay({ icon, juego, pts, ptsBreakdown, scores, onContinue }) {
+function FinishOverlay({ icon, juego, pts, ptsBreakdown, scores, onContinue, esInvitado, onRegistrar }) {
   const total = Object.values(scores).reduce((a, b) => a + b, 0) + pts;
   return (
     <div className="overlay">
@@ -306,18 +306,29 @@ function FinishOverlay({ icon, juego, pts, ptsBreakdown, scores, onContinue }) {
             {ptsBreakdown}
           </div>
         )}
-        <div style={{ background: "#000000", border: "1px solid #ffd70033", borderRadius: 10, padding: "12px 16px", marginBottom: 20, width: "100%" }}>
-          <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: 1, color: "#7a7a7a", marginBottom: 10 }}>Tu acumulado de hoy</div>
-          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14, marginBottom: 6 }}>
-            <span style={{ color: "#9a9a9a" }}>Este juego</span>
-            <span style={{ fontFamily: "'Teko',sans-serif", fontSize: 18, color: "#ffb400" }}>{pts} pts</span>
+        {esInvitado ? (
+          <div style={{ background: "#000000", border: "1px solid #ffb40044", borderRadius: 10, padding: "16px", marginBottom: 20, width: "100%", textAlign: "center" }}>
+            <div style={{ fontSize: 13, color: "#c8c8c8", marginBottom: 12, lineHeight: 1.5 }}>
+              Has jugado como invitado — esta puntuación <strong>no se ha guardado</strong>. Crea una cuenta gratis para guardarla, jugar cada día y competir en el ranking.
+            </div>
+            <button className="btn-main" style={{ width: "100%" }} onClick={onRegistrar}>CREAR CUENTA GRATIS</button>
           </div>
-          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14 }}>
-            <span style={{ color: "#9a9a9a" }}>Total ranking hoy</span>
-            <span style={{ fontFamily: "'Teko',sans-serif", fontSize: 18, color: "#ffd700" }}>{total} pts</span>
+        ) : (
+          <div style={{ background: "#000000", border: "1px solid #ffd70033", borderRadius: 10, padding: "12px 16px", marginBottom: 20, width: "100%" }}>
+            <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: 1, color: "#7a7a7a", marginBottom: 10 }}>Tu acumulado de hoy</div>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14, marginBottom: 6 }}>
+              <span style={{ color: "#9a9a9a" }}>Este juego</span>
+              <span style={{ fontFamily: "'Teko',sans-serif", fontSize: 18, color: "#ffb400" }}>{pts} pts</span>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14 }}>
+              <span style={{ color: "#9a9a9a" }}>Total ranking hoy</span>
+              <span style={{ fontFamily: "'Teko',sans-serif", fontSize: 18, color: "#ffd700" }}>{total} pts</span>
+            </div>
           </div>
-        </div>
-        <button className="btn-green" style={{ width: "100%", background: "#1a3a6b" }} onClick={onContinue}>VER RANKING →</button>
+        )}
+        <button className="btn-green" style={{ width: "100%", background: esInvitado ? "none" : "#1a3a6b", border: esInvitado ? "1px solid #2a2a2a" : "none", color: esInvitado ? "#7a7a7a" : undefined }} onClick={onContinue}>
+          {esInvitado ? "SEGUIR COMO INVITADO" : "VER RANKING →"}
+        </button>
       </div>
     </div>
   );
@@ -368,7 +379,7 @@ function Proximamente({ icon, nombre }) {
 }
 
 
-function TestDiario({ onFinish, done, scores, preguntas }) {
+function TestDiario({ onFinish, done, scores, preguntas, esInvitado, onRegistrar }) {
   const [phase, setPhase] = useState("intro");
   const [idx, setIdx] = useState(0);
   const [sel, setSel] = useState(null);
@@ -481,7 +492,8 @@ function TestDiario({ onFinish, done, scores, preguntas }) {
           )}
         </div>
       }
-      onContinue={() => { setShowOverlay(false); setShowResult(true); onFinish && onFinish(finalPts); }} />
+      onContinue={() => { setShowOverlay(false); setShowResult(true); onFinish && onFinish(finalPts); }}
+      esInvitado={esInvitado} onRegistrar={onRegistrar} />
   );
 
   if (showResult) return (
@@ -1531,6 +1543,7 @@ export default function App() {
   const [authMsg, setAuthMsg] = useState("");
   const [authLoading, setAuthLoading] = useState(false);
   const [checkingSession, setCheckingSession] = useState(true);
+  const [modoInvitado, setModoInvitado] = useState(false);
   // Mapa entre pestaña y URL. Así la barra de direcciones muestra goalwin.pro/test-diario
   // en vez de quedarse siempre en goalwin.pro, y el botón "atrás" del navegador
   // vuelve a la pantalla anterior de la app en vez de salir de la web.
@@ -1841,7 +1854,7 @@ export default function App() {
     </div>
   );
 
-  if (!user) return (
+  if (!user && !modoInvitado) return (
     <div style={{ background: "#0a0a0f", minHeight: "100vh" }}>
       <style>{css}</style>
       <div className="login-wrap">
@@ -1867,6 +1880,9 @@ export default function App() {
           </button>
           <button className="btn-sub" onClick={() => { setAuthMode(m => m === "login" ? "register" : "login"); setAuthErr(""); setAuthMsg(""); }}>
             {authMode === "login" ? "¿No tienes cuenta? Regístrate" : "¿Ya tienes cuenta? Inicia sesión"}
+          </button>
+          <button className="btn-sub" style={{ marginTop: 8, borderStyle: "dashed" }} onClick={() => setModoInvitado(true)}>
+            👀 Probar el Test Diario sin registrarme
           </button>
         </div>
       </div>
@@ -1895,9 +1911,19 @@ export default function App() {
       <header className="hdr">
         <div className="hdr-logo">GOAL <span>WIN</span></div>
         <div className="hdr-right">
-          <span className="hdr-user">{user.nombre}</span>
-          <span className="hdr-pts">⚡ {totalPts}</span>
-          <button className="btn-out" onClick={handleLogout}>Salir</button>
+          {user ? (
+            <>
+              <span className="hdr-user">{user.nombre}</span>
+              <span className="hdr-pts">⚡ {totalPts}</span>
+              <button className="btn-out" onClick={handleLogout}>Salir</button>
+            </>
+          ) : (
+            <>
+              <span className="hdr-user" style={{ color: "#ffb400" }}>👀 Invitado</span>
+              <button className="btn-out" style={{ borderColor: "#ffb400", color: "#ffb400" }}
+                onClick={() => { setModoInvitado(false); setAuthMode("register"); }}>Crear cuenta</button>
+            </>
+          )}
         </div>
       </header>
       <nav className="nav">
@@ -1931,24 +1957,33 @@ export default function App() {
                     <div className="mode-name">{m.name}</div>
                     <div className="mode-desc">{m.desc}</div>
                   </div>
-                  {m.maxPts === null
-                    ? <div style={{ marginLeft: "auto", fontSize: 11, color: "#7a7a7a" }}>PRONTO</div>
-                    : done[m.id]
-                      ? <div className="mode-pts">✓ {scores[m.id] || 0}</div>
-                      : <div className="mode-pts">+{m.maxPts}</div>
+                  {m.id !== "test" && !user
+                    ? <div style={{ marginLeft: "auto", fontSize: 16 }}>🔒</div>
+                    : m.maxPts === null
+                      ? <div style={{ marginLeft: "auto", fontSize: 11, color: "#7a7a7a" }}>PRONTO</div>
+                      : done[m.id]
+                        ? <div className="mode-pts">✓ {scores[m.id] || 0}</div>
+                        : <div className="mode-pts">+{m.maxPts}</div>
                   }
                 </div>
               ))}
             </div>
           </>
         )}
-        {tab === "test"       && (juegosActivos.test       ? <TestDiario       done={done.test}       scores={scores} preguntas={preguntasHoy} onFinish={(pts) => handleFinish("test", pts)} />       : <Proximamente icon="✔"  nombre="TEST DIARIO" />)}
-        {tab === "alineacion" && (juegosActivos.alineacion  ? <AdivinaAlineacion done={done.alineacion} scores={scores} partido={partidoHoy} onFinish={(pts) => handleFinish("alineacion", pts)} /> : <Proximamente icon="🏟" nombre="ADIVINA LA ALINEACIÓN" />)}
-        {tab === "jugador"    && (juegosActivos.jugador      ? <AdivinaJugador    done={done.jugador}    scores={scores} jugador={jugadorHoy} onFinish={(pts) => handleFinish("jugador", pts)} />    : <Proximamente icon="⚽" nombre="ADIVINA EL JUGADOR" />)}
-        {tab === "combina"    && (juegosActivos.combina      ? <Combina           done={done.combina}    scores={scores} combinas={combinasHoy} onFinish={(pts) => handleFinish("combina", pts)} />    : <Proximamente icon="🔍" nombre="COMBINA" />)}
-        {tab === "precio"     && (juegosActivos.precio       ? <PrecioJusto       done={done.precio}     scores={scores} reto={precioHoy}       onFinish={(pts) => handleFinish("precio", pts)} />      : <Proximamente icon="💰" nombre="EL PRECIO JUSTO" />)}
-        {tab === "orden"      && (juegosActivos.orden        ? <Ordena            done={done.orden}      scores={scores} reto={ordenHoy}        onFinish={(pts) => handleFinish("orden", pts)} />       : <Proximamente icon="🔀" nombre="ORDENA" />)}
-        {tab === "ranking"    && <Ranking user={user} scores={scores} />}
+        {tab === "test"       && (juegosActivos.test       ? <TestDiario       done={done.test}       scores={scores} preguntas={preguntasHoy} onFinish={(pts) => handleFinish("test", pts)} esInvitado={!user} onRegistrar={() => { setModoInvitado(false); setAuthMode("register"); }} /> : <Proximamente icon="✔"  nombre="TEST DIARIO" />)}
+        {tab !== "inicio" && tab !== "test" && !user && (
+          <div className="card">
+            <div className="card-title">🔒 Necesitas una cuenta</div>
+            <div className="card-sub">Ya has probado Goal Win con el Test Diario. Crea una cuenta gratis para jugar el resto de modos, guardar tu progreso y aparecer en el ranking.</div>
+            <button className="btn-main" onClick={() => { setModoInvitado(false); setAuthMode("register"); }}>CREAR CUENTA GRATIS</button>
+          </div>
+        )}
+        {tab === "alineacion" && user && (juegosActivos.alineacion  ? <AdivinaAlineacion done={done.alineacion} scores={scores} partido={partidoHoy} onFinish={(pts) => handleFinish("alineacion", pts)} /> : <Proximamente icon="🏟" nombre="ADIVINA LA ALINEACIÓN" />)}
+        {tab === "jugador"    && user && (juegosActivos.jugador      ? <AdivinaJugador    done={done.jugador}    scores={scores} jugador={jugadorHoy} onFinish={(pts) => handleFinish("jugador", pts)} />    : <Proximamente icon="⚽" nombre="ADIVINA EL JUGADOR" />)}
+        {tab === "combina"    && user && (juegosActivos.combina      ? <Combina           done={done.combina}    scores={scores} combinas={combinasHoy} onFinish={(pts) => handleFinish("combina", pts)} />    : <Proximamente icon="🔍" nombre="COMBINA" />)}
+        {tab === "precio"     && user && (juegosActivos.precio       ? <PrecioJusto       done={done.precio}     scores={scores} reto={precioHoy}       onFinish={(pts) => handleFinish("precio", pts)} />      : <Proximamente icon="💰" nombre="EL PRECIO JUSTO" />)}
+        {tab === "orden"      && user && (juegosActivos.orden        ? <Ordena            done={done.orden}      scores={scores} reto={ordenHoy}        onFinish={(pts) => handleFinish("orden", pts)} />       : <Proximamente icon="🔀" nombre="ORDENA" />)}
+        {tab === "ranking"    && user && <Ranking user={user} scores={scores} />}
       </main>
     </div>
   );
