@@ -1247,7 +1247,7 @@ function Ranking({ user, scores }) {
     const d = new Date(fechaStr + "T00:00:00");
     return DIAS_SEMANA[d.getDay() === 0 ? 6 : d.getDay() - 1];
   };
-  const totalDia = (row) => (row?.test_pts || 0) + (row?.alineacion_pts || 0) + (row?.jugador_pts || 0) + (row?.combina_pts || 0) + (row?.precio_pts || 0));
+  const totalDia = (row) => (row?.test_pts || 0) + (row?.alineacion_pts || 0) + (row?.jugador_pts || 0) + (row?.combina_pts || 0) + (row?.precio_pts || 0);
 
   return (
     <div className="card">
