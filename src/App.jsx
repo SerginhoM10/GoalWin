@@ -1327,6 +1327,7 @@ export default function App() {
   const [authLoading, setAuthLoading] = useState(false);
   const [checkingSession, setCheckingSession] = useState(true);
   const [modoInvitado, setModoInvitado] = useState(false);
+  const [saveWarning, setSaveWarning] = useState(null);
   // Mapa entre pestaña y URL. Así la barra de direcciones muestra goalwin.pro/test-diario
   // en vez de quedarse siempre en goalwin.pro, y el botón "atrás" del navegador
   // vuelve a la pantalla anterior de la app en vez de salir de la web.
@@ -1543,24 +1544,35 @@ export default function App() {
 
     // Guarda el acumulado en Supabase (puntos de hoy y suma a la semana)
     const { data: { session } } = await supabase.auth.getSession();
-    if (session?.user) {
-      const { data: perfil } = await supabase.from("perfiles").select("*").eq("id", session.user.id).single();
-      if (perfil) {
-        await supabase.from("perfiles").update({
-          puntos_totales: newTotal,
-          puntos_semana: (perfil.puntos_semana || 0) + pts,
-        }).eq("id", session.user.id);
-      }
+    if (!session?.user) {
+      setSaveWarning("⚠️ No se ha podido guardar tu puntuación: tu sesión no es válida. Es posible que tengas que confirmar tu email o volver a iniciar sesión.");
+      return;
+    }
 
-      // Guarda el progreso de HOY llamando a la función de Supabase, que calcula
-      // la fecha en el servidor (no confía en la fecha que mande el navegador).
-      await supabase.rpc("guardar_progreso_diario", {
-        p_test: newDone.test ? newScores.test : null,
-        p_alineacion: newDone.alineacion ? newScores.alineacion : null,
-        p_jugador: newDone.jugador ? newScores.jugador : null,
-        p_combina: newDone.combina ? newScores.combina : null,
-        p_precio: newDone.precio ? newScores.precio : null,
-      });
+    let huboError = false;
+    const { data: perfil, error: errPerfil } = await supabase.from("perfiles").select("*").eq("id", session.user.id).single();
+    if (errPerfil) huboError = true;
+    if (perfil) {
+      const { error: errUpdate } = await supabase.from("perfiles").update({
+        puntos_totales: newTotal,
+        puntos_semana: (perfil.puntos_semana || 0) + pts,
+      }).eq("id", session.user.id);
+      if (errUpdate) huboError = true;
+    }
+
+    // Guarda el progreso de HOY llamando a la función de Supabase, que calcula
+    // la fecha en el servidor (no confía en la fecha que mande el navegador).
+    const { error: errProgreso } = await supabase.rpc("guardar_progreso_diario", {
+      p_test: newDone.test ? newScores.test : null,
+      p_alineacion: newDone.alineacion ? newScores.alineacion : null,
+      p_jugador: newDone.jugador ? newScores.jugador : null,
+      p_combina: newDone.combina ? newScores.combina : null,
+      p_precio: newDone.precio ? newScores.precio : null,
+    });
+    if (errProgreso) huboError = true;
+
+    if (huboError) {
+      setSaveWarning("⚠️ Ha habido un problema guardando tu puntuación. Comprueba tu conexión a internet y que tu email esté confirmado. Si vuelves a entrar y ves este juego como no jugado, es que no llegó a guardarse.");
     }
   };
 
@@ -1704,6 +1716,12 @@ export default function App() {
         ))}
       </nav>
       <main className="main">
+        {saveWarning && (
+          <div className="alert alert-ko" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
+            <span>{saveWarning}</span>
+            <button className="btn-out" onClick={() => setSaveWarning(null)}>✕</button>
+          </div>
+        )}
         {tab === "inicio" && (
           <>
             <div className="home-hero">
