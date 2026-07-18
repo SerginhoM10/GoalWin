@@ -1197,222 +1197,6 @@ function PrecioJusto({ onFinish, done, scores, reto: RETO }) {
   );
 }
 
-// ─── ORDENA ───────────────────────────────────────────────────────────────────
-function Ordena({ onFinish, done, scores, reto: RETO }) {
-  const [phase, setPhase] = useState("intro");
-  const [rondaIdx, setRondaIdx] = useState(0);
-  const [orden, setOrden] = useState([]);
-  const [dragIdx, setDragIdx] = useState(null);
-  const [dragX, setDragX] = useState(0);
-  const itemRefs = useRef([]);
-  const containerRef = useRef(null);
-  const dragInfo = useRef(null);
-
-  const [totalPts, setTotalPts] = useState(0);
-  const [resultadosRondas, setResultadosRondas] = useState([]);
-  const [rondaResultado, setRondaResultado] = useState(null);
-  const [showRondaResult, setShowRondaResult] = useState(false);
-  const [finished, setFinished] = useState(false);
-  const [showOverlay, setShowOverlay] = useState(false);
-  const [enviando, setEnviando] = useState(false);
-
-  const criterios = RETO?.criterios || [];
-  const jugadoresBase = RETO?.jugadores || [];
-  const criterioActual = criterios[rondaIdx];
-
-  useEffect(() => {
-    if (jugadoresBase.length) {
-      // Baraja el orden inicial de cada ronda (solo afecta al punto de partida, no a la puntuación)
-      const copia = [...jugadoresBase];
-      for (let i = copia.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [copia[i], copia[j]] = [copia[j], copia[i]];
-      }
-      setOrden(copia);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rondaIdx, RETO]);
-
-  if (!RETO || jugadoresBase.length === 0 || criterios.length === 0) return (
-    <div className="card">
-      <div className="card-title">🔀 ORDENA</div>
-      <div className="alert alert-inf">Todavía no hay ningún reto configurado para hoy.</div>
-    </div>
-  );
-
-  if (done && !finished) return (
-    <div className="card">
-      <div className="card-title">🔀 ORDENA</div>
-      <div className="alert alert-ok">✅ Ya jugaste Ordena hoy. ¡Vuelve mañana!</div>
-    </div>
-  );
-
-  if (phase === "intro") return (
-    <IntroModal icon="🔀" title="ORDENA"
-      text={`Los mismos ${jugadoresBase.length} jugadores se ordenan de ${criterios.length} formas distintas. En cada ronda, arrastra las tarjetas: el valor más ALTO va a la IZQUIERDA (verde), el más BAJO a la DERECHA (rojo). Primera ronda: ${criterios[0]?.criterio}.`}
-      onStart={() => setPhase("playing")} />
-  );
-
-  const onPointerDown = (e, idx) => {
-    if (!itemRefs.current[idx]) return;
-    const rect = itemRefs.current[idx].getBoundingClientRect();
-    dragInfo.current = { startX: e.clientX, offsetInItem: e.clientX - rect.left };
-    setDragIdx(idx);
-    try { e.target.setPointerCapture(e.pointerId); } catch (err) {}
-  };
-
-  const onPointerMove = (e) => {
-    if (dragIdx === null || !dragInfo.current || !containerRef.current) return;
-    const deltaX = e.clientX - dragInfo.current.startX;
-    setDragX(deltaX);
-
-    const containerRect = containerRef.current.getBoundingClientRect();
-    const pointerXInContainer = e.clientX - containerRect.left + containerRef.current.scrollLeft;
-    let newIndex = dragIdx;
-    for (let i = 0; i < orden.length; i++) {
-      const el = itemRefs.current[i];
-      if (!el) continue;
-      const r = el.getBoundingClientRect();
-      const mid = r.left + r.width / 2 - containerRect.left + containerRef.current.scrollLeft;
-      if (pointerXInContainer > mid) newIndex = i;
-    }
-    if (newIndex !== dragIdx) {
-      setOrden(o => {
-        const copy = [...o];
-        const [moved] = copy.splice(dragIdx, 1);
-        copy.splice(newIndex, 0, moved);
-        return copy;
-      });
-      dragInfo.current.startX = e.clientX;
-      setDragIdx(newIndex);
-      setDragX(0);
-    }
-  };
-
-  const onPointerUp = () => { setDragIdx(null); setDragX(0); dragInfo.current = null; };
-
-  const enviarRonda = async () => {
-    if (enviando) return;
-    setEnviando(true);
-    const p_orden_usuario = orden.map(j => j.id);
-    const { data } = await supabase.rpc("orden_comprobar", { p_criterio_id: criterioActual.id, p_orden_usuario });
-    const filas = data || [];
-    const pts = filas.reduce((s, f) => s + (f.pts || 0), 0);
-    setResultadosRondas(r => [...r, { criterio: criterioActual.criterio, unidad: criterioActual.unidad, filas, pts }]);
-    setTotalPts(t => t + pts);
-    setRondaResultado({ criterio: criterioActual.criterio, unidad: criterioActual.unidad, filas, pts });
-    setShowRondaResult(true);
-    setEnviando(false);
-  };
-
-  const siguienteRonda = () => {
-    setShowRondaResult(false);
-    if (rondaIdx + 1 < criterios.length) {
-      setRondaIdx(i => i + 1);
-    } else {
-      setFinished(true);
-      setShowOverlay(true);
-    }
-  };
-
-  if (showOverlay) return (
-    <FinishOverlay icon="🔀" juego="Ordena" pts={totalPts} scores={scores}
-      onContinue={() => { setShowOverlay(false); onFinish && onFinish(totalPts); }} />
-  );
-
-  if (finished) return (
-    <div className="card">
-      <div className="card-title">🔀 ORDENA</div>
-      <div className="result-pts-big">{totalPts}</div>
-      <div className="result-sub">puntos totales · {criterios.length} rondas</div>
-      {resultadosRondas.map((r, ri) => (
-        <div key={ri} style={{ marginBottom: 14 }}>
-          <div className="lbl" style={{ marginBottom: 6 }}>{r.criterio} — {r.pts} pts</div>
-          <div className="answer-review">
-            {r.filas.map(f => (
-              <div key={f.posicion} className={`ar ${f.correcto ? "ar-ok" : "ar-ko"}`}>
-                <span>{f.correcto ? "✔" : "❌"}</span>
-                <span>
-                  <strong>#{f.posicion}</strong> pusiste a <strong>{f.nombre}</strong> ({f.valor_real}{r.unidad ? ` ${r.unidad}` : ""})
-                  {!f.correcto && <> · iba <strong>{f.correcto_nombre}</strong> ({f.correcto_valor}{r.unidad ? ` ${r.unidad}` : ""})</>}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-
-  if (showRondaResult) return (
-    <div className="card">
-      <div className="card-title">🔀 RONDA {rondaIdx + 1}/{criterios.length}</div>
-      <div className="card-sub">{rondaResultado.criterio}</div>
-      <div className="result-pts-big" style={{ fontSize: 44 }}>{rondaResultado.pts} pts</div>
-      <div className="answer-review" style={{ margin: "16px 0" }}>
-        {rondaResultado.filas.map(f => (
-          <div key={f.posicion} className={`ar ${f.correcto ? "ar-ok" : "ar-ko"}`}>
-            <span>{f.correcto ? "✔" : "❌"}</span>
-            <span>
-              <strong>#{f.posicion}</strong> pusiste a <strong>{f.nombre}</strong> ({f.valor_real}{rondaResultado.unidad ? ` ${rondaResultado.unidad}` : ""})
-              {!f.correcto && <> · iba <strong>{f.correcto_nombre}</strong> ({f.correcto_valor}{rondaResultado.unidad ? ` ${rondaResultado.unidad}` : ""})</>}
-            </span>
-          </div>
-        ))}
-      </div>
-      <button className="btn-main" onClick={siguienteRonda}>
-        {rondaIdx + 1 < criterios.length ? "SIGUIENTE RONDA" : "VER RESULTADO FINAL"}
-      </button>
-    </div>
-  );
-
-  return (
-    <div className="card">
-      <div className="card-title">🔀 ORDENA — Ronda {rondaIdx + 1}/{criterios.length}</div>
-      <div className="card-sub">{criterioActual.criterio} · de mayor (izquierda) a menor (derecha)</div>
-
-      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, marginBottom: 8, textTransform: "uppercase", letterSpacing: 1, fontWeight: 700 }}>
-        <span style={{ color: "#3ddc72" }}>⬅ Mayor</span><span style={{ color: "#ff3b3b" }}>Menor ➡</span>
-      </div>
-
-      <div ref={containerRef} style={{
-        position: "relative", borderRadius: 10, padding: 10, overflowX: "auto",
-        display: "flex", gap: 10,
-        background: "linear-gradient(90deg, #3ddc7233 0%, #00000000 20%, #00000000 80%, #ff3b3b33 100%)",
-        border: "1px solid #2a2a2a",
-      }} onPointerMove={onPointerMove} onPointerUp={onPointerUp} onPointerCancel={onPointerUp}>
-        {orden.map((j, i) => (
-          <div key={j.id} ref={el => itemRefs.current[i] = el}
-            onPointerDown={(e) => onPointerDown(e, i)}
-            style={{
-              display: "flex", flexDirection: "column", alignItems: "center", gap: 6,
-              background: "#0a0a0a", border: "1px solid #2a2a2a", borderRadius: 8, padding: "12px 10px",
-              minWidth: 96, flexShrink: 0,
-              touchAction: "none", cursor: "grab", userSelect: "none",
-              transform: dragIdx === i ? `translateX(${dragX}px) scale(1.04)` : "none",
-              zIndex: dragIdx === i ? 10 : 1,
-              boxShadow: dragIdx === i ? "0 8px 20px #000000aa" : "none",
-              transition: dragIdx === i ? "none" : "transform 0.15s",
-            }}>
-            <span style={{ fontFamily: "'Teko',sans-serif", fontSize: 18, color: "#7a7a7a" }}>{i + 1}</span>
-            {j.foto_url ? (
-              <img src={j.foto_url} alt={j.nombre} style={{ width: 52, height: 52, borderRadius: "50%", objectFit: "cover" }} />
-            ) : (
-              <div style={{ width: 52, height: 52, borderRadius: "50%", background: "#111111", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22 }}>⚽</div>
-            )}
-            <div style={{ fontFamily: "'Teko',sans-serif", fontWeight: 700, fontSize: 15, color: "#f2f2f2", textAlign: "center", lineHeight: 1.1 }}>{j.nombre}</div>
-            <span style={{ fontSize: 16, color: "#7a7a7a" }}>⠿</span>
-          </div>
-        ))}
-      </div>
-
-      <button className="btn-main" style={{ marginTop: 16 }} disabled={enviando} onClick={enviarRonda}>
-        {enviando ? "ENVIANDO..." : `ENVIAR RONDA ${rondaIdx + 1}`}
-      </button>
-    </div>
-  );
-}
-
 // ─── RANKING ──────────────────────────────────────────────────────────────────
 function Ranking({ user, scores }) {
   const [tab, setTab] = useState("diario");
@@ -1463,7 +1247,7 @@ function Ranking({ user, scores }) {
     const d = new Date(fechaStr + "T00:00:00");
     return DIAS_SEMANA[d.getDay() === 0 ? 6 : d.getDay() - 1];
   };
-  const totalDia = (row) => (row?.test_pts || 0) + (row?.alineacion_pts || 0) + (row?.jugador_pts || 0) + (row?.combina_pts || 0) + (row?.precio_pts || 0) + (row?.orden_pts || 0);
+  const totalDia = (row) => (row?.test_pts || 0) + (row?.alineacion_pts || 0) + (row?.jugador_pts || 0) + (row?.combina_pts || 0) + (row?.precio_pts || 0));
 
   return (
     <div className="card">
@@ -1512,7 +1296,6 @@ function Ranking({ user, scores }) {
                       <div className="des-row"><span className="des-lbl">⚽ Jugador</span><span className="des-val">{filas[0]?.jugador_pts || 0} pts</span></div>
                       <div className="des-row"><span className="des-lbl">🔍 Combina</span><span className="des-val">{filas[0]?.combina_pts || 0} pts</span></div>
                       <div className="des-row"><span className="des-lbl">💰 Precio Justo</span><span className="des-val">{filas[0]?.precio_pts || 0} pts</span></div>
-                      <div className="des-row"><span className="des-lbl">🔀 Ordena</span><span className="des-val">{filas[0]?.orden_pts || 0} pts</span></div>
                     </>
                   ) : filas.length === 0 ? (
                     <div style={{ fontSize: 13, color: "#7a7a7a", textAlign: "center", padding: "6px 0" }}>Sin puntos esta semana todavía.</div>
@@ -1549,7 +1332,7 @@ export default function App() {
   // vuelve a la pantalla anterior de la app en vez de salir de la web.
   const TAB_PATHS = {
     inicio: "/", test: "/test-diario", alineacion: "/alineacion",
-    jugador: "/jugador-misterio", combina: "/combina", precio: "/precio-justo", orden: "/ordena", ranking: "/ranking",
+    jugador: "/jugador-misterio", combina: "/combina", precio: "/precio-justo", ranking: "/ranking",
   };
   const pathToTab = (path) => Object.keys(TAB_PATHS).find(k => TAB_PATHS[k] === path) || "inicio";
 
@@ -1570,17 +1353,16 @@ export default function App() {
     return () => window.removeEventListener("popstate", onPopState);
   }, []);
   const setTab = goTo;
-  const [scores, setScores] = useState({ test: 0, alineacion: 0, jugador: 0, combina: 0, precio: 0, orden: 0 });
-  const [done, setDone] = useState({ test: false, alineacion: false, jugador: false, combina: false, precio: false, orden: false });
+  const [scores, setScores] = useState({ test: 0, alineacion: 0, jugador: 0, combina: 0, precio: 0 });
+  const [done, setDone] = useState({ test: false, alineacion: false, jugador: false, combina: false, precio: false });
 
   // Contenido cargado desde Supabase
-  const [juegosActivos, setJuegosActivos] = useState({ test: false, alineacion: false, jugador: false, combina: false, precio: false, orden: false });
+  const [juegosActivos, setJuegosActivos] = useState({ test: false, alineacion: false, jugador: false, combina: false, precio: false });
   const [preguntasHoy, setPreguntasHoy] = useState([]);
   const [partidoHoy, setPartidoHoy] = useState(null);
   const [jugadorHoy, setJugadorHoy] = useState(null);
   const [combinasHoy, setCombinasHoy] = useState([]);
   const [precioHoy, setPrecioHoy] = useState(null);
-  const [ordenHoy, setOrdenHoy] = useState(null);
   const [loadingContent, setLoadingContent] = useState(true);
 
   const totalPts = Object.values(scores).reduce((a, b) => a + b, 0);
@@ -1684,20 +1466,6 @@ export default function App() {
         setPrecioHoy({ id: reto.id, presupuesto: reto.presupuesto, jugadores: jugs || [] });
       }
 
-      // Ordena del día (el valor real de cada jugador no viaja aquí,
-      // solo se revela ronda a ronda al enviar la solución)
-      const { data: or2 } = await supabase.from("orden_retos").select("*");
-      if (or2 && or2.length > 0) {
-        const rand = seededRand(semilla + 50);
-        const idx = Math.floor(rand() * or2.length);
-        const reto = or2[idx];
-        const [{ data: jugs }, { data: crits }] = await Promise.all([
-          supabase.from("orden_jugadores_publicos").select("*").eq("reto_id", reto.id),
-          supabase.from("orden_criterios").select("*").eq("reto_id", reto.id).order("orden"),
-        ]);
-        setOrdenHoy({ id: reto.id, jugadores: jugs || [], criterios: crits || [] });
-      }
-
       setLoadingContent(false);
     };
     loadContent();
@@ -1748,7 +1516,6 @@ export default function App() {
           jugador: data.jugador_pts ?? 0,
           combina: data.combina_pts ?? 0,
           precio: data.precio_pts ?? 0,
-          orden: data.orden_pts ?? 0,
         });
         setDone({
           test: data.test_pts !== null,
@@ -1756,12 +1523,11 @@ export default function App() {
           jugador: data.jugador_pts !== null,
           combina: data.combina_pts !== null,
           precio: data.precio_pts !== null,
-          orden: data.orden_pts !== null,
         });
       } else {
         // No hay fila para hoy todavía: es un día nuevo, nada jugado aún
-        setScores({ test: 0, alineacion: 0, jugador: 0, combina: 0, precio: 0, orden: 0 });
-        setDone({ test: false, alineacion: false, jugador: false, combina: false, precio: false, orden: false });
+        setScores({ test: 0, alineacion: 0, jugador: 0, combina: 0, precio: 0 });
+        setDone({ test: false, alineacion: false, jugador: false, combina: false, precio: false });
       }
     };
     loadProgresoHoy();
@@ -1794,7 +1560,6 @@ export default function App() {
         p_jugador: newDone.jugador ? newScores.jugador : null,
         p_combina: newDone.combina ? newScores.combina : null,
         p_precio: newDone.precio ? newScores.precio : null,
-        p_orden: newDone.orden ? newScores.orden : null,
       });
     }
   };
@@ -1902,7 +1667,6 @@ export default function App() {
     { id: "jugador",   icon: "⚽", name: "ADIVINA EL JUGADOR",     desc: "5 pistas progresivas · Sin tiempo",              maxPts: 300 },
     { id: "combina",   icon: "🔍", name: "COMBINA",                desc: "1 minuto · Máximas combinaciones",              maxPts: 400 },
     { id: "precio",    icon: "💰", name: "EL PRECIO JUSTO",         desc: "Reparte el presupuesto entre los jugadores",    maxPts: 1000 },
-    { id: "orden",     icon: "🔀", name: "ORDENA",                  desc: "Arrastra a los jugadores en el orden correcto", maxPts: 300 },
   ];
 
   return (
@@ -1934,7 +1698,6 @@ export default function App() {
           ["jugador",   "⚽ JUGADOR"],
           ["combina",   "🔍 COMBINA"],
           ["precio",    "💰 PRECIO"],
-          ["orden",     "🔀 ORDENA"],
           ["ranking",   "🏆 RANKING"],
         ].map(([id, label]) => (
           <button key={id} className={`nav-btn ${tab === id ? "on" : ""}`} onClick={() => setTab(id)}>{label}</button>
@@ -1982,7 +1745,6 @@ export default function App() {
         {tab === "jugador"    && user && (juegosActivos.jugador      ? <AdivinaJugador    done={done.jugador}    scores={scores} jugador={jugadorHoy} onFinish={(pts) => handleFinish("jugador", pts)} />    : <Proximamente icon="⚽" nombre="ADIVINA EL JUGADOR" />)}
         {tab === "combina"    && user && (juegosActivos.combina      ? <Combina           done={done.combina}    scores={scores} combinas={combinasHoy} onFinish={(pts) => handleFinish("combina", pts)} />    : <Proximamente icon="🔍" nombre="COMBINA" />)}
         {tab === "precio"     && user && (juegosActivos.precio       ? <PrecioJusto       done={done.precio}     scores={scores} reto={precioHoy}       onFinish={(pts) => handleFinish("precio", pts)} />      : <Proximamente icon="💰" nombre="EL PRECIO JUSTO" />)}
-        {tab === "orden"      && user && (juegosActivos.orden        ? <Ordena            done={done.orden}      scores={scores} reto={ordenHoy}        onFinish={(pts) => handleFinish("orden", pts)} />       : <Proximamente icon="🔀" nombre="ORDENA" />)}
         {tab === "ranking"    && user && <Ranking user={user} scores={scores} />}
       </main>
     </div>
