@@ -570,6 +570,7 @@ function AdivinaAlineacion({ onFinish, done, scores, partido: ALINEACION }) {
   const [finalPts, setFinalPts] = useState(0);
   const [showOverlay, setShowOverlay] = useState(false);
   const timerRef = useRef(null);
+  const foundRef = useRef([]); // Se mantiene siempre actualizada, para que el cronómetro nunca use datos antiguos
 
   const calcPts = (f) => {
     if (f.length === 11) return 200;
@@ -581,7 +582,7 @@ function AdivinaAlineacion({ onFinish, done, scores, partido: ALINEACION }) {
 
   const endGame = (foundList) => {
     clearInterval(timerRef.current);
-    const f = foundList !== undefined ? foundList : found;
+    const f = foundList !== undefined ? foundList : foundRef.current;
     const pts = calcPts(f);
     setFinalPts(pts);
     setFinished(true);
@@ -1236,7 +1237,11 @@ function Ranking({ user, scores }) {
     setExpanded(i);
     const cacheKey = `${userId}-${tab}`;
     if (!detalle[cacheKey]) {
-      const dias = tab === "diario" ? 1 : 7;
+      // Para "semanal", pedimos justo los días desde el lunes hasta hoy (no una
+      // ventana fija de 7 días), para que coincida con el reinicio del lunes.
+      const diaSemanaHoy = new Date().getDay(); // 0=domingo, 1=lunes, ... 6=sábado
+      const diasDesdeLunes = diaSemanaHoy === 0 ? 7 : diaSemanaHoy;
+      const dias = tab === "diario" ? 1 : diasDesdeLunes;
       const { data } = await supabase.rpc("progreso_diario_de", { p_user_id: userId, p_dias: dias });
       setDetalle(d => ({ ...d, [cacheKey]: data || [] }));
     }
@@ -1530,6 +1535,23 @@ export default function App() {
         setScores({ test: 0, alineacion: 0, jugador: 0, combina: 0, precio: 0 });
         setDone({ test: false, alineacion: false, jugador: false, combina: false, precio: false });
       }
+
+      // Si jugó el Test Diario como invitado hoy mismo y acaba de crear/entrar en
+      // su cuenta, aplicamos esa puntuación ahora en vez de perderla. Solo si
+      // todavía no ha jugado el test hoy con esta cuenta (evita duplicar puntos).
+      const yaJugoTestHoy = data ? data.test_pts !== null : false;
+      if (!yaJugoTestHoy) {
+        try {
+          const guardado = localStorage.getItem("goalwin_guest_test");
+          if (guardado) {
+            const { pts, fecha } = JSON.parse(guardado);
+            if (fecha === getTodayDateStr()) {
+              handleFinish("test", pts);
+            }
+            localStorage.removeItem("goalwin_guest_test");
+          }
+        } catch (e) {}
+      }
     };
     loadProgresoHoy();
   }, [user]);
@@ -1545,19 +1567,43 @@ export default function App() {
     // Guarda el acumulado en Supabase (puntos de hoy y suma a la semana)
     const { data: { session } } = await supabase.auth.getSession();
     if (!session?.user) {
-      setSaveWarning("⚠️ No se ha podido guardar tu puntuación: tu sesión no es válida. Es posible que tengas que confirmar tu email o volver a iniciar sesión.");
+      if (modoInvitado) {
+        // Invitado: no hay cuenta donde guardar, esto es lo esperado (no es un error).
+        // Si es el Test Diario, lo dejamos guardado en este navegador por si se
+        // registra justo después, para no perder la puntuación.
+        if (game === "test") {
+          try { localStorage.setItem("goalwin_guest_test", JSON.stringify({ pts, fecha: getTodayDateStr() })); } catch (e) {}
+        }
+      } else {
+        // Se supone que hay una cuenta con sesión iniciada pero no se encuentra
+        // ninguna sesión válida: esto sí es un problema real, avisamos.
+        setSaveWarning("⚠️ No se ha podido guardar tu puntuación: tu sesión no es válida. Es posible que tengas que confirmar tu email o volver a iniciar sesión.");
+      }
       return;
     }
 
     let huboError = false;
-    const { data: perfil, error: errPerfil } = await supabase.from("perfiles").select("*").eq("id", session.user.id).single();
-    if (errPerfil) huboError = true;
+
+    // maybeSingle() en vez de single(): si por lo que sea el perfil no existe
+    // o hay más de una fila, no lanza un error que rompa todo el guardado.
+    const { data: perfil, error: errPerfil } = await supabase.from("perfiles").select("*").eq("id", session.user.id).maybeSingle();
+    if (errPerfil) console.error("Error leyendo perfil:", errPerfil);
+
     if (perfil) {
       const { error: errUpdate } = await supabase.from("perfiles").update({
         puntos_totales: newTotal,
         puntos_semana: (perfil.puntos_semana || 0) + pts,
       }).eq("id", session.user.id);
-      if (errUpdate) huboError = true;
+      if (errUpdate) { console.error("Error actualizando perfil:", errUpdate); huboError = true; }
+    } else {
+      // No existía perfil: lo creamos ahora en vez de fallar en silencio
+      const { error: errInsert } = await supabase.from("perfiles").insert({
+        id: session.user.id,
+        nombre: session.user.user_metadata?.nombre || session.user.email.split("@")[0],
+        puntos_totales: newTotal,
+        puntos_semana: pts,
+      });
+      if (errInsert) { console.error("Error creando perfil:", errInsert); huboError = true; }
     }
 
     // Guarda el progreso de HOY llamando a la función de Supabase, que calcula
@@ -1569,10 +1615,10 @@ export default function App() {
       p_combina: newDone.combina ? newScores.combina : null,
       p_precio: newDone.precio ? newScores.precio : null,
     });
-    if (errProgreso) huboError = true;
+    if (errProgreso) { console.error("Error guardando progreso diario:", errProgreso); huboError = true; }
 
     if (huboError) {
-      setSaveWarning("⚠️ Ha habido un problema guardando tu puntuación. Comprueba tu conexión a internet y que tu email esté confirmado. Si vuelves a entrar y ves este juego como no jugado, es que no llegó a guardarse.");
+      setSaveWarning("⚠️ Ha habido un problema guardando tu puntuación. Abre la consola del navegador (F12) para ver el error exacto, o dímelo y lo revisamos.");
     }
   };
 
